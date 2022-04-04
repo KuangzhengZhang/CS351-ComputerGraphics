@@ -95,9 +95,9 @@ async function initVertexBuffers(gl) {
   //==============================================================================
   // let filepath = './obj/octahedron.obj';
   // let filepath = './obj/icosahedron.obj';
-  let filepath = './obj/shuttle.obj';
+  // let filepath = './obj/shuttle.obj';
 
-  res = await genVertices(filepath);
+  res = await genVertices();
   var vertices = res[0];
   var n = res[1];
   // Then in the Graphics hardware, create a vertex buffer object (VBO)
@@ -128,10 +128,12 @@ async function initVertexBuffers(gl) {
   return n;
 }
 
-async function genVertices(filepath) {
+async function genVertices() {
   // Read obj file
-  let response = await fetch(filepath);
-  let data = await response.text();
+  // let response = await fetch(filepath);
+  // let data = await response.text();
+
+  let data = await readFile();
 
   // Process data
   data = data.trim().split('\n'); // split by line
@@ -153,7 +155,7 @@ async function genVertices(filepath) {
   })
   console.log('max: ' + max + '    min: ' + min);
   max = Math.max(Math.abs(max), Math.abs(min));
-  
+
   // Generate vertices pairs
   let pairs = [];
   let fragmentNum = fragment.length;
@@ -198,6 +200,18 @@ async function genVertices(filepath) {
   console.log('vertices:');
   console.log(vertices);
   return [vertices, n];
+}
+
+function readFile() {
+  return new Promise((resolve, reject) => {
+    let file = document.getElementById("file").files[0];
+    console.log('OBJ file: ' + file.name);
+    let reader = new FileReader();
+    reader.readAsText(file);
+    reader.onload = e => {
+      resolve(reader.result);
+    }
+  })
 }
 
 function deduplicate(arr) {
