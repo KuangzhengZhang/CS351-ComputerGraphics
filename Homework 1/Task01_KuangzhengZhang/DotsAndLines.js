@@ -31,7 +31,7 @@ var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n' +
   'void main() {\n' +
   '  gl_Position = a_Position;\n' +
-  '  gl_PointSize = 10.0;\n' +
+  '  gl_PointSize = 20.0;\n' +
   '}\n';
 
 // Fragment shader program
@@ -93,17 +93,22 @@ function main() {
 
 function initVertexBuffers(gl) {
 //==============================================================================
+  // Read obj file
+  let response = await fetch('./obj/octahedron.obj')
+  let data = await response.text()
+  data = data.trim().split('\n')
+  let vertice = []
+  let fragment = []
+  data.forEach(line => {
+    if (line.startsWith('v')) {
+      vertice.push([line.substring(1).trim().split(/\s+/)]);
+    } else if (line.startsWith('f')) {
+      fragment.push([line.substring(1).trim().split(/\s+/)]);
+    }
+  })
+  let n = vertice.length; // The number of vertices
 // first, create an array with all our vertex attribute values:
-  var vertices = new Float32Array([
-     0.0,  0.5, 0.0, 1.0,	// CAREFUL! I made these into 4D points/ vertices: x,y,z,w.
-    -0.2,  0.0, 0.0, 1.0,	// new point!  (? What happens if I make w=0 instead of 1.0?)
-    -0.5, -0.5, 0.0, 1.0,   
-     0.0, -0.2, 0.0, 1.0, 	// new point!
-     0.5, -0.5, 0.0, 1.0,	// 
-     0.2,  0.0, 0.0, 1.0, 	// new point!  (note we need a trailing comma here)
-     
-  ]);
-  var n = 6; // The number of vertices
+  var vertices = new Float32Array(n);
 
   // Then in the Graphics hardware, create a vertex buffer object (VBO)
   var vertexBuffer = gl.createBuffer();	// get it's 'handle'
