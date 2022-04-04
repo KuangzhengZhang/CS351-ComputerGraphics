@@ -42,7 +42,7 @@ var FSHADER_SOURCE =
   '}\n';
 
 function main() {
-//==============================================================================
+  //==============================================================================
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
 
@@ -60,39 +60,39 @@ function main() {
   }
 
   // Write buffer full of vertices to the GPU, and make it available to shaders
-  var n = initVertexBuffers(gl);	
+  var n = initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to load vertices into the GPU');
     return;
   }
 
   // Specify the color for clearing <canvas>: (Northwestern purple)
-  gl.clearColor(78/255, 42/255, 132/255 , 1.0);	// R,G,B,A (A==opacity)
+  gl.clearColor(78 / 255, 42 / 255, 132 / 255, 1.0);	// R,G,B,A (A==opacity)
 
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   // Draw connect-the-dots for 6 vertices (never 'vertexes'!!).
   // see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawArrays.xml
- gl.drawArrays(gl.LINE_LOOP, 0, n); // gl.drawArrays(mode, first, count)
-			//mode: sets drawing primitive to use. Other valid choices: 
-				// gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
-				// gl.TRIANGLES, gl.TRIANGLES_STRIP, gl.TRIANGLE_FAN
-			// first: index of 1st element of array.
-			// count; number of elements to read from the array.
+  gl.drawArrays(gl.LINE_LOOP, 0, n); // gl.drawArrays(mode, first, count)
+  //mode: sets drawing primitive to use. Other valid choices: 
+  // gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+  // gl.TRIANGLES, gl.TRIANGLES_STRIP, gl.TRIANGLE_FAN
+  // first: index of 1st element of array.
+  // count; number of elements to read from the array.
 
   // That went well. Let's draw the dots themselves!
   gl.drawArrays(gl.POINTS, 0, n); // gl.drawArrays(mode, first, count)
-			//mode: sets drawing primitive to use. Other valid choices: 
-				// gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
-				// gl.TRIANGLES, gl.TRIANGLES_STRIP, gl.TRIANGLE_FAN
-			// first: index of 1st element of array.
-			// count; number of elements to read from the array.
+  //mode: sets drawing primitive to use. Other valid choices: 
+  // gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
+  // gl.TRIANGLES, gl.TRIANGLES_STRIP, gl.TRIANGLE_FAN
+  // first: index of 1st element of array.
+  // count; number of elements to read from the array.
 }
 
 
 function initVertexBuffers(gl) {
-//==============================================================================
+  //==============================================================================
   // Read obj file
   let response = await fetch('./obj/octahedron.obj')
   let data = await response.text()
@@ -107,7 +107,7 @@ function initVertexBuffers(gl) {
     }
   })
   let n = vertice.length; // The number of vertices
-// first, create an array with all our vertex attribute values:
+  // first, create an array with all our vertex attribute values:
   var vertices = new Float32Array(n);
 
   // Then in the Graphics hardware, create a vertex buffer object (VBO)
