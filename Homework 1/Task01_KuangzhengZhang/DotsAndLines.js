@@ -41,7 +41,7 @@ var FSHADER_SOURCE =
   '  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n' +
   '}\n';
 
-function main() {
+async function main() {
   //==============================================================================
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
@@ -60,7 +60,7 @@ function main() {
   }
 
   // Write buffer full of vertices to the GPU, and make it available to shaders
-  var n = initVertexBuffers(gl);
+  var n = await initVertexBuffers(gl);
   if (n < 0) {
     console.log('Failed to load vertices into the GPU');
     return;
@@ -74,7 +74,7 @@ function main() {
 
   // Draw connect-the-dots for 6 vertices (never 'vertexes'!!).
   // see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawArrays.xml
-  gl.drawArrays(gl.LINE_LOOP, 0, n); // gl.drawArrays(mode, first, count)
+  gl.drawArrays(gl.LINE_STRIP, 0, n); // gl.drawArrays(mode, first, count)
   //mode: sets drawing primitive to use. Other valid choices: 
   // gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
   // gl.TRIANGLES, gl.TRIANGLES_STRIP, gl.TRIANGLE_FAN
@@ -91,24 +91,55 @@ function main() {
 }
 
 
-function initVertexBuffers(gl) {
+async function initVertexBuffers(gl) {
   //==============================================================================
   // Read obj file
-  let response = await fetch('./obj/octahedron.obj')
-  let data = await response.text()
-  data = data.trim().split('\n')
-  let vertice = []
-  let fragment = []
+  let filepath = './obj/octahedron.obj';
+  let response = await fetch(filepath);
+  let data = await response.text();
+  data = data.trim().split('\n');
+  let vertice = [];
+  let fragment = [];
   data.forEach(line => {
     if (line.startsWith('v')) {
-      vertice.push([line.substring(1).trim().split(/\s+/)]);
+      let tmp = line.substring(1).trim().split(/\s+/);
+      tmp.push('1');
+      vertice.push(tmp);
     } else if (line.startsWith('f')) {
-      fragment.push([line.substring(1).trim().split(/\s+/)]);
+      let tmp = line.substring(1).trim().split(/\s+/);
+      fragment.push(tmp);
     }
   })
-  let n = vertice.length; // The number of vertices
+
+  // Generate vertices pairs
+  let pairs = [];
+  let fragmentNum = fragment.length;
+  for (let i = 0; i < fragmentNum; i++) {
+    for (let j = 0; j < 3; j++) {
+      let pair = [parseInt(fragment[i][j]) - 1, parseInt(fragment[i][(j + 1) % 3]) - 1].sort();
+      pairs.push(pair);
+    }
+  }
+  pairs = deduplicate(pairs);
+  pairsNum = pairs.length;
+
+  // let n = vertice.length; // The number of vertices
+  let n = pairsNum * 2; // The number of vertices
   // first, create an array with all our vertex attribute values:
-  var vertices = new Float32Array(n);
+  var vertices = new Float32Array(pairsNum * 4 * 2);
+
+  for (let i = 0; i < pairsNum; i++) {
+    idx1 = pairs[i][0];
+    idx2 = pairs[i][1];
+    for (let j = 0; j < 4; j++) {
+      vertices[i * 4 * 2 + j] = parseFloat(vertice[idx1][j]);
+    }
+    for (let j = 0; j < 4; j++) {
+      vertices[i * 4 * 2 + j + 4] = parseFloat(vertice[idx2][j]);
+    }
+  }
+  console.log('vertices:');
+  console.log(vertices);
 
   // Then in the Graphics hardware, create a vertex buffer object (VBO)
   var vertexBuffer = gl.createBuffer();	// get it's 'handle'
@@ -136,4 +167,16 @@ function initVertexBuffers(gl) {
   gl.enableVertexAttribArray(a_PositionID);
 
   return n;
+}
+
+function deduplicate(arr) {
+  obj = {};
+  res = [];
+  arr.map(e => {
+    if (!obj.hasOwnProperty(e)) {
+      obj[e] = e;
+      res.push(e);
+    }
+  })
+  return res;
 }
