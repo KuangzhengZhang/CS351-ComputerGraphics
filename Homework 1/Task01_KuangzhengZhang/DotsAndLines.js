@@ -31,7 +31,7 @@ var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n' +
   'void main() {\n' +
   '  gl_Position = a_Position;\n' +
-  '  gl_PointSize = 20.0;\n' +
+  '  gl_PointSize = 10.0;\n' +
   '}\n';
 
 // Fragment shader program
@@ -74,7 +74,7 @@ async function main() {
 
   // Draw connect-the-dots for 6 vertices (never 'vertexes'!!).
   // see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawArrays.xml
-  gl.drawArrays(gl.LINE_STRIP, 0, n); // gl.drawArrays(mode, first, count)
+  gl.drawArrays(gl.LINES, 0, n); // gl.drawArrays(mode, first, count)
   //mode: sets drawing primitive to use. Other valid choices: 
   // gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
   // gl.TRIANGLES, gl.TRIANGLES_STRIP, gl.TRIANGLE_FAN
@@ -93,54 +93,13 @@ async function main() {
 
 async function initVertexBuffers(gl) {
   //==============================================================================
-  // Read obj file
-  let filepath = './obj/octahedron.obj';
-  let response = await fetch(filepath);
-  let data = await response.text();
-  data = data.trim().split('\n');
-  let vertice = [];
-  let fragment = [];
-  data.forEach(line => {
-    if (line.startsWith('v')) {
-      let tmp = line.substring(1).trim().split(/\s+/);
-      tmp.push('1');
-      vertice.push(tmp);
-    } else if (line.startsWith('f')) {
-      let tmp = line.substring(1).trim().split(/\s+/);
-      fragment.push(tmp);
-    }
-  })
+  // let filepath = './obj/octahedron.obj';
+  // let filepath = './obj/icosahedron.obj';
+  let filepath = './obj/shuttle.obj';
 
-  // Generate vertices pairs
-  let pairs = [];
-  let fragmentNum = fragment.length;
-  for (let i = 0; i < fragmentNum; i++) {
-    for (let j = 0; j < 3; j++) {
-      let pair = [parseInt(fragment[i][j]) - 1, parseInt(fragment[i][(j + 1) % 3]) - 1].sort();
-      pairs.push(pair);
-    }
-  }
-  pairs = deduplicate(pairs);
-  pairsNum = pairs.length;
-
-  // let n = vertice.length; // The number of vertices
-  let n = pairsNum * 2; // The number of vertices
-  // first, create an array with all our vertex attribute values:
-  var vertices = new Float32Array(pairsNum * 4 * 2);
-
-  for (let i = 0; i < pairsNum; i++) {
-    idx1 = pairs[i][0];
-    idx2 = pairs[i][1];
-    for (let j = 0; j < 4; j++) {
-      vertices[i * 4 * 2 + j] = parseFloat(vertice[idx1][j]);
-    }
-    for (let j = 0; j < 4; j++) {
-      vertices[i * 4 * 2 + j + 4] = parseFloat(vertice[idx2][j]);
-    }
-  }
-  console.log('vertices:');
-  console.log(vertices);
-
+  res = await genVertices(filepath);
+  var vertices = res[0];
+  var n = res[1];
   // Then in the Graphics hardware, create a vertex buffer object (VBO)
   var vertexBuffer = gl.createBuffer();	// get it's 'handle'
   if (!vertexBuffer) {
@@ -167,6 +126,78 @@ async function initVertexBuffers(gl) {
   gl.enableVertexAttribArray(a_PositionID);
 
   return n;
+}
+
+async function genVertices(filepath) {
+  // Read obj file
+  let response = await fetch(filepath);
+  let data = await response.text();
+
+  // Process data
+  data = data.trim().split('\n'); // split by line
+  let vertice = []; // save v in obj
+  let fragment = []; // save f in obj
+  let max = - Math.pow(10, 10000);
+  let min = Math.pow(10, 10000);
+  data.forEach(line => {
+    if (line.startsWith('v')) {
+      let tmp = line.substring(1).trim().split(/\s+/).map(x => parseFloat(x));
+      if (Math.max(...tmp) > max) { max = Math.max(...tmp) }
+      if (Math.min(...tmp) < min) { min = Math.min(...tmp) }
+      tmp.push(1.0);
+      vertice.push(tmp);
+    } else if (line.startsWith('f')) {
+      let tmp = line.substring(1).trim().split(/\s+/).map(x => parseInt(x) - 1);
+      fragment.push(tmp);
+    }
+  })
+  console.log('max: ' + max + '    min: ' + min);
+  max = Math.max(Math.abs(max), Math.abs(min));
+  
+  // Generate vertices pairs
+  let pairs = [];
+  let fragmentNum = fragment.length;
+  for (let i = 0; i < fragmentNum; i++) {
+    for (let j = 0; j < 3; j++) {
+      let pair = [fragment[i][j], fragment[i][(j + 1) % 3]].sort((a, b) => a - b);
+      pairs.push(pair);
+    }
+  }
+  pairs = deduplicate(pairs);
+  pairsNum = pairs.length;
+  // console.log(pairs);
+
+  // let n = vertice.length; // The number of vertices
+  let n = pairsNum * 2; // The number of vertices
+  // first, create an array with all our vertex attribute values:
+  var vertices = new Float32Array(pairsNum * 4 * 2);
+
+  // Generate vertices
+  for (let i = 0; i < pairsNum; i++) {
+    idx1 = pairs[i][0];
+    idx2 = pairs[i][1];
+    for (let j = 0; j < 4; j++) {
+      if (j == 3) { // alpha
+        vertices[i * 4 * 2 + j] = vertice[idx1][j];
+      } else {
+        // vertices[i * 4 * 2 + j] = vertice[idx1][j];
+        vertices[i * 4 * 2 + j] = vertice[idx1][j] / max;
+        // vertices[i * 4 * 2 + j] = vertice[idx1][j] > 0 ? vertice[idx1][j] / max : vertice[idx1][j] / Math.abs(min);
+      }
+    }
+    for (let j = 0; j < 4; j++) {
+      if (j == 3) { // alpha
+        vertices[i * 4 * 2 + j + 4] = vertice[idx2][j];
+      } else {
+        // vertices[i * 4 * 2 + j + 4] = vertice[idx2][j];
+        vertices[i * 4 * 2 + j + 4] = vertice[idx2][j] / max;
+        // vertices[i * 4 * 2 + j + 4] = vertice[idx2][j] > 0 ? vertice[idx2][j] / max : vertice[idx2][j] / Math.abs(min);
+      }
+    }
+  }
+  console.log('vertices:');
+  console.log(vertices);
+  return [vertices, n];
 }
 
 function deduplicate(arr) {
