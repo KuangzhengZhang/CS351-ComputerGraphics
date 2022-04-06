@@ -61,6 +61,7 @@ async function main() {
 
   // Write buffer full of vertices to the GPU, and make it available to shaders
   var n = await initVertexBuffers(gl);
+  console.log('n: ' + n);
   if (n < 0) {
     console.log('Failed to load vertices into the GPU');
     return;
@@ -93,10 +94,6 @@ async function main() {
 
 async function initVertexBuffers(gl) {
   //==============================================================================
-  // let filepath = './obj/octahedron.obj';
-  // let filepath = './obj/icosahedron.obj';
-  // let filepath = './obj/shuttle.obj';
-
   res = await genVertices();
   var vertices = res[0];
   var n = res[1];
@@ -130,9 +127,6 @@ async function initVertexBuffers(gl) {
 
 async function genVertices() {
   // Read obj file
-  // let response = await fetch(filepath);
-  // let data = await response.text();
-
   let data = await readFile();
 
   // Process data
@@ -153,7 +147,6 @@ async function genVertices() {
       fragment.push(tmp);
     }
   })
-  console.log('max: ' + max + '    min: ' + min);
   max = Math.max(Math.abs(max), Math.abs(min));
 
   // Generate vertices pairs
@@ -165,9 +158,7 @@ async function genVertices() {
       pairs.push(pair);
     }
   }
-  pairs = deduplicate(pairs);
   pairsNum = pairs.length;
-  // console.log(pairs);
 
   // let n = vertice.length; // The number of vertices
   let n = pairsNum * 2; // The number of vertices
@@ -182,18 +173,14 @@ async function genVertices() {
       if (j == 3) { // alpha
         vertices[i * 4 * 2 + j] = vertice[idx1][j];
       } else {
-        // vertices[i * 4 * 2 + j] = vertice[idx1][j];
-        vertices[i * 4 * 2 + j] = vertice[idx1][j] / max;
-        // vertices[i * 4 * 2 + j] = vertice[idx1][j] > 0 ? vertice[idx1][j] / max : vertice[idx1][j] / Math.abs(min);
+        vertices[i * 4 * 2 + j] = vertice[idx1][j] / (max * 1.1);
       }
     }
     for (let j = 0; j < 4; j++) {
       if (j == 3) { // alpha
         vertices[i * 4 * 2 + j + 4] = vertice[idx2][j];
       } else {
-        // vertices[i * 4 * 2 + j + 4] = vertice[idx2][j];
-        vertices[i * 4 * 2 + j + 4] = vertice[idx2][j] / max;
-        // vertices[i * 4 * 2 + j + 4] = vertice[idx2][j] > 0 ? vertice[idx2][j] / max : vertice[idx2][j] / Math.abs(min);
+        vertices[i * 4 * 2 + j + 4] = vertice[idx2][j] / (max * 1.1);
       }
     }
   }
@@ -212,16 +199,4 @@ function readFile() {
       resolve(reader.result);
     }
   })
-}
-
-function deduplicate(arr) {
-  obj = {};
-  res = [];
-  arr.map(e => {
-    if (!obj.hasOwnProperty(e)) {
-      obj[e] = e;
-      res.push(e);
-    }
-  })
-  return res;
 }
