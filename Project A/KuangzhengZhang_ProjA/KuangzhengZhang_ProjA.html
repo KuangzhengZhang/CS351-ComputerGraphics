@@ -12,6 +12,26 @@
     <canvas id="webgl" width="400" height="400">
         Please use a browser that supports "canvas"
     </canvas>
+    <p>Mouse Position:
+    <div id="mousePos"></div>
+    </p>
+
+    <p>currentAngle:
+    <div id="currentAngle"></div>
+    </p>
+
+    <!-- <p>Mouse Position:
+    <div id="mousePos"></div>
+    </p> -->
+    <!-- <div class="dg ac">
+        <div class="dg main a" style="width: 245px;">
+            <div class="close-button close-bottom" style="width: 245px;">Open Controls</div>
+        </div>
+    </div> -->
+
+    <button type="button" onclick="spinDown()">Spin << </button>
+	<button type="button" onclick="runStop()"> Run/Stop</button>
+	<button type="button" onclick="spinUp()">Spin >> </button>
 
     <script src="lib/webgl-utils.js"></script>
     <script src="lib/webgl-debug.js"></script>
@@ -19,6 +39,8 @@
     <script src="lib/cuon-matrix-quat03.js"></script>
     <script src="lib/dat.gui.min.js"></script>
     <script src="KuangzhengZhang_ProjA.js"></script>
+    <script src="obj/EnderDragon.js"></script>
+    <script src="obj/Shuttle.js"></script>
 </body>
 
 </html>
