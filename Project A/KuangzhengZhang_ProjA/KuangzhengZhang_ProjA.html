@@ -9,16 +9,12 @@
 </head>
 
 <body onload="main()">
-    <canvas id="webgl" width="400" height="400">
+    <canvas id="webgl" width="0" height="0">
         Please use a browser that supports "canvas"
     </canvas>
-    <p>Mouse Position:
-    <div id="mousePos"></div>
-    </p>
 
-    <p>currentAngle:
-    <div id="currentAngle"></div>
-    </p>
+    <div id="mousePos"></div>
+    <div id="EnderDragonPos"></div>
 
     <!-- <p>Mouse Position:
     <div id="mousePos"></div>
@@ -29,9 +25,9 @@
         </div>
     </div> -->
 
-    <button type="button" onclick="spinDown()">Spin << </button>
+    <!-- <button type="button" onclick="spinDown()">Spin << </button>
 	<button type="button" onclick="runStop()"> Run/Stop</button>
-	<button type="button" onclick="spinUp()">Spin >> </button>
+	<button type="button" onclick="spinUp()">Spin >> </button> -->
 
     <script src="lib/webgl-utils.js"></script>
     <script src="lib/webgl-debug.js"></script>

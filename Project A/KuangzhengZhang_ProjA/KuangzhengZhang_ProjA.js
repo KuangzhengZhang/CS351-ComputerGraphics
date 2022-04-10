@@ -1,14 +1,18 @@
-
 let Config = function () {
     // Env
     this.Env = {
         bgClr: [78, 42, 132, 1],
+        Width: 1000,
+        Height: 650,
         speed: 0.5
     }
 
     // EnderDragon
     this.EnderDragon = {
-        speed: 0.5
+        Pause: false,
+        Clr: [78, 42, 132, 1],
+        Size: 0.2,
+        rotSpeed: 45
     }
     // EndCrystal
     this.EndCrystal = {
@@ -20,14 +24,20 @@ let gl;
 let canvas;
 let config = new Config();
 let gui;
+
+// Position
 let mousePos = [];
+let EnderDragonPos = [0, 0, 0];
 
 // Angle
 let ANGLE_STEP = 45.0;
-let currentAngle = 0.0;
+let currAngle = 0.0;
 
 // Animation
 let g_last = Date.now();
+
+// Mouse
+let dragMode = false;
 
 let vertices;
 
@@ -55,13 +65,15 @@ var VSHADER_SOURCE =
 
 var FSHADER_SOURCE =
     'precision mediump float;\n' +
+    'uniform mat4 u_ColorMatrix;\n' +
     'varying vec4 v_Color;\n' +
     'void main() {\n' +
-    '  gl_FragColor = v_Color;\n' +
+    '  gl_FragColor = u_ColorMatrix * v_Color;\n' +
     '}\n';
 
 function initCfg() {
     gui = new dat.GUI({ name: 'GUI' });
+    gui.width = 270;
     gui.remember(config);
     // Env
     let Env = gui.addFolder('Env');
@@ -69,14 +81,19 @@ function initCfg() {
     bgClr.onChange(() => {
         gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        console.debug(`bgClr set to: ${config.Env.bgClr}`);
+        console.debug(`Env.bgClr set to: ${config.Env.bgClr}`);
     });
+    Env.add(config.Env, 'Width', 0, 1000).listen();
+    Env.add(config.Env, 'Height', 0, 1000).listen();
     Env.add(config.Env, 'speed', -10, 10).listen();
     Env.open();
 
     // EnderDragon
     let EnderDragon = gui.addFolder('EnderDragon');
-    EnderDragon.add(config.EnderDragon, 'speed', -10, 10).listen();
+    EnderDragon.add(config.EnderDragon, 'Pause').listen();
+    EnderDragon.addColor(config.EnderDragon, 'Clr').listen();
+    EnderDragon.add(config.EnderDragon, 'Size', 0, 1).listen();
+    EnderDragon.add(config.EnderDragon, 'rotSpeed', -180, 180).listen();
     EnderDragon.open();
 
     // EndCrystal
@@ -91,17 +108,42 @@ function initMenu() {
     // a = Env.addColor(config.Env, 'bgClr').listen();
 }
 
+function getMousePos(event) {
+    let rect = canvas.getBoundingClientRect();
+    return {
+        rect: rect,
+        x: (event.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
+        y: (event.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
+    }
+}
+
+function isMouseInCanvas() {
+    let pos = getMousePos(event);
+    let x = pos.x;
+    let y = pos.y;
+    return pos.rect.left < x && x < pos.rect.right && pos.rect.top < y && y < pos.rect.bottom
+}
+
 function mouseDown(event) {
-    // console.debug(`MouseDownEvent: Position = (${event.offsetX}, ${event.offsetY})`);
+    if (isMouseInCanvas()) { dragMode = true };
+    console.debug(`MouseDownEvent: Position = (${event.offsetX}, ${event.offsetY})`);
 }
 
 function mouseUp(event) {
-    // console.debug(`MouseUpEvent: Position = (${event.offsetX}, ${event.offsetY})`);
+    dragMode = false;
+    console.debug(`MouseUpEvent: Position = (${event.offsetX}, ${event.offsetY})`);
 }
 
 function mouseMove(event) {
-    // document.getElementById('mousePos').innerHTML = `X: ${event.offsetX}    Y: ${event.offsetY}`;
-    // console.debug(`MouseMoveEvent: Position = (${event.offsetX}, ${event.offsetY})`);
+    let pos = getMousePos(event);
+    let x = pos.x;
+    let y = pos.y;
+    if (dragMode) {
+        EnderDragonPos[0] = x * 2 / (pos.rect.right - pos.rect.left) - 1;
+        EnderDragonPos[1] = - y * 2 / (pos.rect.bottom - pos.rect.top) + 1;
+    }
+    document.getElementById('mousePos').innerHTML = `Mouse Position: (${x}, ${y})`;
+    // console.debug(`MouseMoveEvent: Position = (${x}, ${y})`);
 }
 
 function keyDown(event) {
@@ -119,8 +161,11 @@ function keyUp(event) {
 }
 
 async function initVertexBuffer() {
-    // let n = await genVertices(EnderDragon_OBJ);
-    let n = await genVertices(Shuttle_OBJ);
+    // let n = await genVertices(EnderDragon_OBJ1);
+    // let n = await genVertices(EnderDragon_OBJ2);
+
+    vertices = EnderDragon_OBJ2;
+    n = parseInt(vertices.length / 7);
     console.log(n);
 
     // Create a buffer object
@@ -164,21 +209,31 @@ async function initVertexBuffer() {
     return n;
 }
 
-function draw(currentAngle, modelMatrix, u_ModelMatrix) {
+function draw(currAngle, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    modelMatrix.setTranslate(-0.4, -0.4, 0.0);
-    modelMatrix.scale(0.5, 0.5, 0.5);
-    modelMatrix.rotate(currentAngle, 0, 1, 0);
+    // modelMatrix
+    modelMatrix.setTranslate(EnderDragonPos[0], EnderDragonPos[1], EnderDragonPos[2]);
+    modelMatrix.scale(config.EnderDragon.Size, config.EnderDragon.Size, config.EnderDragon.Size);
+    modelMatrix.rotate(currAngle, 0, 1, 0);
+
+    // colorMatrix
+    colorMatrix.setTranslate(config.EnderDragon.Clr[0] / 255, config.EnderDragon.Clr[0] / 255, config.EnderDragon.Clr[0] / 255);
+
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
     gl.drawArrays(gl.TRIANGLES, 0, n);
 }
 
 function animate(angle) {
+    if (config.EnderDragon.Pause) {
+        g_last = Date.now();
+        return angle;
+    }
     let now = Date.now();
     let elapsed = now - g_last;
     g_last = now;
 
-    let newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
+    let newAngle = angle + (config.EnderDragon.rotSpeed * elapsed) / 1000.0;
     return newAngle %= 360;
 }
 
@@ -272,31 +327,14 @@ async function genVertices(data) {
     return n;
 }
 
-// Button
-function spinUp() {
-    ANGLE_STEP += 25;
-}
-
-function spinDown() {
-    ANGLE_STEP -= 25;
-}
-
-function runStop() {
-    if (ANGLE_STEP * ANGLE_STEP > 1) {
-        myTmp = ANGLE_STEP;
-        ANGLE_STEP = 0;
-    }
-    else {
-        ANGLE_STEP = myTmp;
-    }
-}
-
 async function main() {
     initCfg();
     initMenu();
 
     // Retrieve <canvas> element
     canvas = document.getElementById('webgl');
+    canvas.width = config.Env.Width;
+    canvas.height = config.Env.Height;
 
     // Get the rendering context for WebGL
     gl = getWebGLContext(canvas);
@@ -322,6 +360,11 @@ async function main() {
         console.log('Failed to get the storage location of u_ModelMatrix');
         return;
     }
+    var u_ColorMatrix = gl.getUniformLocation(gl.program, 'u_ColorMatrix');
+    if (!u_ColorMatrix) {
+        console.log('Failed to get the storage location of u_ColorMatrix');
+        return;
+    }
     // Create a local version of our model matrix in JavaScript 
     var modelMatrix = new Matrix4();
     // Constructor for 4x4 matrix, defined in the 'cuon-matrix-quat03.js' library
@@ -329,6 +372,8 @@ async function main() {
 
     // Initialize the matrix: 
     modelMatrix.setIdentity(); // (not req'd: constructor makes identity matrix)
+    var colorMatrix = new Matrix4();
+    colorMatrix.setIdentity();
 
     // Transfer modelMatrix values to the u_ModelMatrix variable in the GPU
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
@@ -343,9 +388,9 @@ async function main() {
     gl.drawArrays(gl.TRIANGLES, 0, n);
 
     let tick = function () {
-        currentAngle = animate(currentAngle);  // Update the rotation angle
-        draw(currentAngle, modelMatrix, u_ModelMatrix);   // Draw shapes
-        // console.debug(`currentAngle = ${currentAngle}`);
+        currAngle = animate(currAngle);  // Update the rotation angle
+        draw(currAngle, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);   // Draw shapes
+        // console.debug(`currAngle = ${currAngle}`);
         requestAnimationFrame(tick, canvas);
     };
     tick();
