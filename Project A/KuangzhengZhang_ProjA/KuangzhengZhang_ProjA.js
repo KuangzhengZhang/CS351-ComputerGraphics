@@ -9,9 +9,9 @@ let Config = function () {
 
     // EnderDragon
     this.EnderDragon = {
-        Pause: false,
+        Pause: true,
         Clr: [78, 42, 132, 1],
-        Size: 0.2,
+        Size: 0.3,
         rotSpeed: 45
     }
     // EndCrystal
@@ -24,6 +24,10 @@ let gl;
 let canvas;
 let config = new Config();
 let gui;
+
+let modelMatrix = new Matrix4();
+let mvpMatrix = new Matrix4();
+let colorMatrix = new Matrix4();
 
 // Position
 let mousePos = [];
@@ -53,12 +57,12 @@ document.onkeyup = keyUp;
 // document.onkeypress = keyPress;
 
 var VSHADER_SOURCE =
-    'uniform mat4 u_ModelMatrix;\n' +
     'attribute vec4 a_Position;\n' +
     'attribute vec4 a_Color;\n' +
+    'uniform mat4 u_MvpMatrix;\n' +
     'varying vec4 v_Color;\n' +
     'void main() {\n' +
-    '   gl_Position = u_ModelMatrix * a_Position;\n' +
+    '   gl_Position = u_MvpMatrix * a_Position;\n' +
     '   gl_PointSize = 10.0;\n' +
     '   v_Color = a_Color;\n' +
     '}\n';
@@ -77,12 +81,13 @@ function initCfg() {
     gui.remember(config);
     // Env
     let Env = gui.addFolder('Env');
-    bgClr = Env.addColor(config.Env, 'bgClr').listen();
-    bgClr.onChange(() => {
-        gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        console.debug(`Env.bgClr set to: ${config.Env.bgClr}`);
-    });
+    Env.addColor(config.Env, 'bgClr').listen();
+    // bgClr = Env.addColor(config.Env, 'bgClr').listen();
+    // bgClr.onChange(() => {
+    //     gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
+    //     gl.clear(gl.COLOR_BUFFER_BIT);
+    //     console.debug(`Env.bgClr set to: ${config.Env.bgClr}`);
+    // });
     Env.add(config.Env, 'Width', 0, 1000).listen();
     Env.add(config.Env, 'Height', 0, 1000).listen();
     Env.add(config.Env, 'speed', -10, 10).listen();
@@ -160,27 +165,26 @@ function keyUp(event) {
     console.debug(`KeyUpEvent: key='${event.key}' | code='${event.code}'`);
 }
 
-async function initVertexBuffer() {
+function initVertexBuffer() {
     // let n = await genVertices(EnderDragon_OBJ1);
     // let n = await genVertices(EnderDragon_OBJ2);
 
-    vertices = EnderDragon_OBJ2;
-    n = parseInt(vertices.length / 7);
-    console.log(n);
+    // vertices = EnderDragon_Body;
+    vertices = Cube;
+    // n = parseInt(vertices.length / 7);
+    // console.log(n);
 
-    // Create a buffer object
+    // vertexBuffer
     var vertexBuffer = gl.createBuffer();
     if (!vertexBuffer) {
         console.log('Failed to create the buffer object');
         return false;
     }
-
+    let FSIZE = vertices.BYTES_PER_ELEMENT;
     // Bind the buffer object to target
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     // Write date into the buffer object
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-    let FSIZE = vertices.BYTES_PER_ELEMENT;
-
     var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
     if (a_Position < 0) {
         console.log('Failed to get the storage location of a_Position');
@@ -188,11 +192,10 @@ async function initVertexBuffer() {
     }
     // Assign the buffer object to a_Position variable
     gl.vertexAttribPointer(a_Position, 4, gl.FLOAT, false, FSIZE * 7, 0);
-
     // Enable the assignment to a_Position variable
     gl.enableVertexAttribArray(a_Position);
 
-
+    // Color
     var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
     if (a_Color < 0) {
         console.log('Failed to get the storage location of a_Color');
@@ -200,28 +203,49 @@ async function initVertexBuffer() {
     }
     // Assign the buffer object to a_Color variable
     gl.vertexAttribPointer(a_Color, 3, gl.FLOAT, false, FSIZE * 7, FSIZE * 4);
-
     // Enable the assignment to a_Color variable
     gl.enableVertexAttribArray(a_Color);
 
+    // indexBuffer
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    var indexBuffer = gl.createBuffer();
+    if (!indexBuffer) {
+        console.log('Failed to create the buffer object');
+        return -1;
+    }
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-    return n;
+    return indices.length;
 }
 
-function draw(currAngle, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
+function draw(currAngle, u_MvpMatrix, u_ColorMatrix) {
+    // Clear
+    gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    // modelMatrix
+
+    // Body modelMatrix
     modelMatrix.setTranslate(EnderDragonPos[0], EnderDragonPos[1], EnderDragonPos[2]);
     modelMatrix.scale(config.EnderDragon.Size, config.EnderDragon.Size, config.EnderDragon.Size);
     modelMatrix.rotate(currAngle, 0, 1, 0);
-
-    // colorMatrix
     colorMatrix.setTranslate(config.EnderDragon.Clr[0] / 255, config.EnderDragon.Clr[0] / 255, config.EnderDragon.Clr[0] / 255);
+    drawBox(gl, n, u_MvpMatrix, u_ColorMatrix);
 
-    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    // Body modelMatrix
+    modelMatrix.scale(1.2, 0.15, 0.15);
+    modelMatrix.translate(0.2, 0.2, 0);
+    modelMatrix.rotate(currAngle, 0, 1, 0);
+    colorMatrix.setTranslate(config.EnderDragon.Clr[0] / 255, config.EnderDragon.Clr[0] / 255, config.EnderDragon.Clr[0] / 255);
+    drawBox(gl, n, u_MvpMatrix, u_ColorMatrix);
+}
+
+// Draw the cube
+function drawBox(gl, n, u_MvpMatrix, u_ColorMatrix) {
+    mvpMatrix = modelMatrix;
+    gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
     gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
-    gl.drawArrays(gl.TRIANGLES, 0, n);
+    // Draw
+    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
 }
 
 function animate(angle) {
@@ -327,6 +351,30 @@ async function genVertices(data) {
     return n;
 }
 
+function initArrayBuffer(gl, attribute, data, type, num) {
+    // Create a buffer object
+    var buffer = gl.createBuffer();
+    if (!buffer) {
+        console.log('Failed to create the buffer object');
+        return false;
+    }
+    // Write date into the buffer object
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+
+    // Assign the buffer object to the attribute variable
+    var a_attribute = gl.getAttribLocation(gl.program, attribute);
+    if (a_attribute < 0) {
+        console.log('Failed to get the storage location of ' + attribute);
+        return false;
+    }
+    gl.vertexAttribPointer(a_attribute, num, type, false, 0, 0);
+    // Enable the assignment of the buffer object to the attribute variable
+    gl.enableVertexAttribArray(a_attribute);
+
+    return true;
+}
+
 async function main() {
     initCfg();
     initMenu();
@@ -349,15 +397,16 @@ async function main() {
         return;
     }
 
-    n = await initVertexBuffer();
+    n = initVertexBuffer();
+    console.log(n)
     if (n < 0) {
         console.log('Failed to set the vertex information');
         return;
     }
 
-    var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
-    if (!u_ModelMatrix) {
-        console.log('Failed to get the storage location of u_ModelMatrix');
+    var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
+    if (!u_MvpMatrix) {
+        console.log('Failed to get the storage location of u_MvpMatrix');
         return;
     }
     var u_ColorMatrix = gl.getUniformLocation(gl.program, 'u_ColorMatrix');
@@ -365,18 +414,9 @@ async function main() {
         console.log('Failed to get the storage location of u_ColorMatrix');
         return;
     }
-    // Create a local version of our model matrix in JavaScript 
-    var modelMatrix = new Matrix4();
-    // Constructor for 4x4 matrix, defined in the 'cuon-matrix-quat03.js' library
-    // supplied by your textbook.  (Chapter 3)
 
-    // Initialize the matrix: 
-    modelMatrix.setIdentity(); // (not req'd: constructor makes identity matrix)
-    var colorMatrix = new Matrix4();
+    modelMatrix.setIdentity();
     colorMatrix.setIdentity();
-
-    // Transfer modelMatrix values to the u_ModelMatrix variable in the GPU
-    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
     gl.enable(gl.DEPTH_TEST);
     // Specify the color for clearing <canvas>
@@ -385,12 +425,12 @@ async function main() {
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    gl.drawArrays(gl.TRIANGLES, 0, n);
+    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
 
     let tick = function () {
         currAngle = animate(currAngle);  // Update the rotation angle
-        draw(currAngle, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);   // Draw shapes
-        // console.debug(`currAngle = ${currAngle}`);
+        draw(currAngle, u_MvpMatrix, u_ColorMatrix);   // Draw shapes
+        console.debug(`currAngle = ${currAngle}`);
         requestAnimationFrame(tick, canvas);
     };
     tick();
