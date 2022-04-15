@@ -1,19 +1,19 @@
 let Config = function () {
     // Env
     this.Env = {
-        bgClr: [78, 42, 132, 1],
+        bgClr: [0, 0, 0, 1],
         Width: 650,
         Height: 650,
-        speed: 0.5
+        mode: 'Drag'
     }
 
     // EnderDragon
     this.EnderDragon = {
         Pause: true,
+        Size: 1,
         Body: {
-            Pause: true,
+            Pause: false,
             Clr: [78, 42, 132, 1],
-            Size: 1,
             rotSpeed: 45,
             angle: 0,
             rotDir: true,
@@ -21,24 +21,33 @@ let Config = function () {
             rotMinAngle: -180
         },
         Tail: {
-            Pause: true,
+            Pause: false,
             Clr: [78, 42, 132, 1],
-            Size: 1,
             rotSpeed: 10,
             angle: 0,
             rotDir: true,
             rotMaxAngle: 15,
             rotMinAngle: -15
         },
-        Wing: {
-            Pause: true,
+        Wing1: {
+            Pause: false,
             Clr: [78, 42, 132, 1],
             Size: 1,
             rotSpeed: 45,
             angle: 0,
             rotDir: true,
-            rotMaxAngle: 45,
-            rotMinAngle: -45
+            rotMaxAngle: 15,
+            rotMinAngle: -15
+        },
+        Wing2: {
+            Pause: false,
+            Clr: [78, 42, 132, 1],
+            Size: 1,
+            rotSpeed: 45,
+            angle: 0,
+            rotDir: true,
+            rotMaxAngle: 15,
+            rotMinAngle: -15
         }
     }
     // EndCrystal
@@ -62,10 +71,6 @@ let colorMatrix = new Matrix4();
 let mousePos = [];
 let EnderDragonPos = [0, 0, 0];
 
-// Angle
-let ANGLE_STEP = 45.0;
-let currAngle = 0.0;
-
 // Animation
 let g_last = Date.now();
 
@@ -80,6 +85,21 @@ let Info = {
             position: null
         },
         Tail: {
+            vertices: null,
+            n: null,
+            position: null
+        },
+        Wing1_1: {
+            vertices: null,
+            n: null,
+            position: null
+        },
+        Wing1_2: {
+            vertices: null,
+            n: null,
+            position: null
+        },
+        Wing2: {
             vertices: null,
             n: null,
             position: null
@@ -125,31 +145,72 @@ function initCfg() {
     gui = new dat.GUI({ name: 'GUI' });
     gui.width = 270;
     gui.remember(config);
+
     // Env
     let Env = gui.addFolder('Env');
     Env.addColor(config.Env, 'bgClr').listen();
     Env.add(config.Env, 'Width', 0, 1000).listen();
     Env.add(config.Env, 'Height', 0, 1000).listen();
-    Env.add(config.Env, 'speed', -10, 10).listen();
+    Env.add(config.Env, 'mode', ['Drag', '111']).listen();
     Env.open();
 
     // EnderDragon
     let EnderDragon = gui.addFolder('EnderDragon');
     EnderDragon.add(config.EnderDragon, 'Pause').listen();
+    EnderDragon.add(config.EnderDragon, 'Size', 0, 1).listen();
 
     // EnderDragonBody
     let EnderDragonBody = EnderDragon.addFolder('Body');
     EnderDragonBody.add(config.EnderDragon.Body, 'Pause').listen();
     EnderDragonBody.addColor(config.EnderDragon.Body, 'Clr').listen();
-    EnderDragonBody.add(config.EnderDragon.Body, 'Size', 0, 1).listen();
     EnderDragonBody.add(config.EnderDragon.Body, 'rotSpeed', 0, 180).listen();
+    EnderDragonBody.add(config.EnderDragon.Body, 'rotMinAngle', -180, 180).listen().onChange(() => {
+        gui.__folders.EnderDragon.__folders.Body.__controllers[4].__min = config.EnderDragon.Body.rotMinAngle + 1;
+        if (config.EnderDragon.Body.rotMaxAngle <= config.EnderDragon.Body.rotMinAngle) {
+            config.EnderDragon.Body.rotMaxAngle = config.EnderDragon.Body.rotMinAngle + 1;
+        }
+    });
+    EnderDragonBody.add(config.EnderDragon.Body, 'rotMaxAngle', config.EnderDragon.Body.rotMinAngle, 180).listen();
 
     // EnderDragonTail
     let EnderDragonTail = EnderDragon.addFolder('Tail');
     EnderDragonTail.add(config.EnderDragon.Tail, 'Pause').listen();
     EnderDragonTail.addColor(config.EnderDragon.Tail, 'Clr').listen();
-    EnderDragonTail.add(config.EnderDragon.Tail, 'Size', 0, 1).listen();
     EnderDragonTail.add(config.EnderDragon.Tail, 'rotSpeed', 0, 50).listen();
+    EnderDragonTail.add(config.EnderDragon.Tail, 'rotMinAngle', -180, 180).listen().onChange(() => {
+        gui.__folders.EnderDragon.__folders.Tail.__controllers[4].__min = config.EnderDragon.Tail.rotMinAngle + 1;
+        if (config.EnderDragon.Tail.rotMaxAngle <= config.EnderDragon.Tail.rotMinAngle) {
+            config.EnderDragon.Tail.rotMaxAngle = config.EnderDragon.Tail.rotMinAngle + 1;
+        }
+    });
+    EnderDragonTail.add(config.EnderDragon.Tail, 'rotMaxAngle', config.EnderDragon.Tail.rotMinAngle, 180).listen();
+
+    // EnderDragonWing1
+    let EnderDragonWing1 = EnderDragon.addFolder('Wing1');
+    EnderDragonWing1.add(config.EnderDragon.Wing1, 'Pause').listen();
+    EnderDragonWing1.addColor(config.EnderDragon.Wing1, 'Clr').listen();
+    EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotSpeed', 0, 50).listen();
+    EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotMinAngle', -180, 180).listen().onChange(() => {
+        gui.__folders.EnderDragon.__folders.Wing1.__controllers[4].__min = config.EnderDragon.Wing1.rotMinAngle + 1;
+        if (config.EnderDragon.Wing1.rotMaxAngle <= config.EnderDragon.Wing1.rotMinAngle) {
+            config.EnderDragon.Wing1.rotMaxAngle = config.EnderDragon.Wing1.rotMinAngle + 1;
+        }
+    });
+    EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotMaxAngle', config.EnderDragon.Wing1.rotMinAngle, 180).listen();
+    EnderDragon.open();
+
+    // EnderDragonWing2
+    let EnderDragonWing2 = EnderDragon.addFolder('Wing2');
+    EnderDragonWing2.add(config.EnderDragon.Wing2, 'Pause').listen();
+    EnderDragonWing2.addColor(config.EnderDragon.Wing2, 'Clr').listen();
+    EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotSpeed', 0, 50).listen();
+    EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotMinAngle', -180, 180).listen().onChange(() => {
+        gui.__folders.EnderDragon.__folders.Wing2.__controllers[4].__min = config.EnderDragon.Wing2.rotMinAngle + 1;
+        if (config.EnderDragon.Wing2.rotMaxAngle <= config.EnderDragon.Wing2.rotMinAngle) {
+            config.EnderDragon.Wing2.rotMaxAngle = config.EnderDragon.Wing2.rotMinAngle + 1;
+        }
+    });
+    EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotMaxAngle', config.EnderDragon.Wing2.rotMinAngle, 180).listen();
     EnderDragon.open();
 
     // EndCrystal
@@ -159,7 +220,8 @@ function initCfg() {
 }
 
 function initMenu() {
-    // let menu = new dat.GUI({ name: 'MENU' });
+    let menu = new dat.GUI({ name: 'MENU' });
+    menu.add(config.Env, 'Width').listen();
     // let Env = menu.addFolder('Env');
     // a = Env.addColor(config.Env, 'bgClr').listen();
 }
@@ -207,6 +269,24 @@ function keyDown(event) {
         return;
     }
     console.debug(`KeyDownEvent: key='${event.key}' | code='${event.code}'`);
+    switch (event.code) {
+        case 'KeyW':
+        case 'ArrowUp':
+            EnderDragonPos[1] += 0.01;
+            break;
+        case 'KeyS':
+        case 'ArrowDown':
+            EnderDragonPos[1] -= 0.01;
+            break;
+        case 'KeyA':
+        case 'ArrowLeft':
+            EnderDragonPos[0] -= 0.01;
+            break;
+        case 'KeyD':
+        case 'ArrowRight':
+            EnderDragonPos[0] += 0.01;
+            break;
+    }
 }
 
 function keyUp(event) {
@@ -219,6 +299,8 @@ function keyUp(event) {
 function initVertexBuffer() {
     defEnderDragonBody();
     defEnderDragonTail();
+    defEnderDragonWing1_1();
+    defEnderDragonWing1_2();
     console.log(Info)
     n = Info.n;
     vertices = new Float32Array(n * floatsPerVertex);
@@ -291,6 +373,16 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, idx = 3);
     modelMatrix = popMatrix();
 
+    pushMatrix(modelMatrix);
+    drawEnderDragonWing1_1(interval, modelMatrix, u_ModelMatrix);
+    modelMatrix = popMatrix();
+
+    pushMatrix(modelMatrix);
+    drawEnderDragonWing1_2(interval, modelMatrix, u_ModelMatrix);
+    modelMatrix = popMatrix();
+
+    pushMatrix(modelMatrix);
+    modelMatrix = popMatrix();
 }
 
 async function genVertices(data) {
@@ -450,6 +542,8 @@ async function main() {
     colorMatrix.setIdentity();
 
     gl.enable(gl.DEPTH_TEST);
+    gl.clearDepth(0.0);
+    gl.depthFunc(gl.GREATER);
     // Specify the color for clearing <canvas>
     gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
 
@@ -463,7 +557,6 @@ async function main() {
         let interval = now - g_last;
         g_last = now;
         draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
-        // console.debug(`currAngle = ${currAngle}`);
         requestAnimationFrame(tick, canvas);
     };
     tick();
@@ -541,7 +634,7 @@ function defEnderDragonBody() {
 function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix) {
     // pushMatrix(modelMatrix);
     modelMatrix.setTranslate(EnderDragonPos[0], EnderDragonPos[1], EnderDragonPos[2]);
-    modelMatrix.scale(config.EnderDragon.Body.Size, config.EnderDragon.Body.Size, config.EnderDragon.Body.Size);
+    modelMatrix.scale(config.EnderDragon.Size, config.EnderDragon.Size, config.EnderDragon.Size);
 
     // Rotate
     if (!config.EnderDragon.Pause && !config.EnderDragon.Body.Pause) {
@@ -551,6 +644,7 @@ function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix) {
     // rotate(interval, 'EnderDragon', 'Body');
 
     modelMatrix.rotate(config.EnderDragon.Body.angle, 0, 1, 0);
+    modelMatrix.rotate(config.EnderDragon.Body.angle, 0, 0, 1);
 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Body.position, Info.EnderDragon.Body.n);
@@ -571,47 +665,47 @@ function defEnderDragonTail() {
         // right
         0.05, -0.05, 0, 1.0, 0.0, 1.0, 1.0,
         0.05, 0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        0.05, -0.05, -0.2, 1.0, 0.0, 1.0, 1.0,
+        0.05, -0.05, 0.2, 1.0, 0.0, 1.0, 1.0,
 
         0.05, 0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        0.05, -0.05, -0.2, 1.0, 0.0, 1.0, 1.0,
-        0.05, 0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
+        0.05, -0.05, 0.2, 1.0, 0.0, 1.0, 1.0,
+        0.05, 0.05, 0.2, 1.0, 1.0, 1.0, 0.0,
 
         // left
         -0.05, -0.05, 0, 1.0, 1.0, 1.0, 0.0,
         -0.05, 0.05, 0, 1.0, 1.0, 0.0, 1.0,
-        -0.05, -0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
+        -0.05, -0.05, 0.2, 1.0, 1.0, 1.0, 0.0,
 
         -0.05, 0.05, 0, 1.0, 1.0, 0.0, 1.0,
-        -0.05, -0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
-        -0.05, 0.05, -0.2, 1.0, 1.0, 0.0, 1.0,
+        -0.05, -0.05, 0.2, 1.0, 1.0, 1.0, 0.0,
+        -0.05, 0.05, 0.2, 1.0, 1.0, 0.0, 1.0,
 
         // up
         -0.05, 0.05, 0, 1.0, 1.0, 0.0, 1.0,
         0.05, 0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        -0.05, 0.05, -0.2, 1.0, 1.0, 0.0, 1.0,
+        -0.05, 0.05, 0.2, 1.0, 1.0, 0.0, 1.0,
 
         0.05, 0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        -0.05, 0.05, -0.2, 1.0, 1.0, 0.0, 1.0,
-        0.05, 0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
+        -0.05, 0.05, 0.2, 1.0, 1.0, 0.0, 1.0,
+        0.05, 0.05, 0.2, 1.0, 1.0, 1.0, 0.0,
 
         // down
         -0.05, -0.05, 0, 1.0, 1.0, 1.0, 0.0,
         0.05, -0.05, 0, 1.0, 0.0, 1.0, 1.0,
-        -0.05, -0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
+        -0.05, -0.05, 0.2, 1.0, 1.0, 1.0, 0.0,
 
         0.05, -0.05, 0, 1.0, 0.0, 1.0, 1.0,
-        -0.05, -0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
-        0.05, -0.05, -0.2, 1.0, 0.0, 1.0, 1.0,
+        -0.05, -0.05, 0.2, 1.0, 1.0, 1.0, 0.0,
+        0.05, -0.05, 0.2, 1.0, 0.0, 1.0, 1.0,
 
         // rear
-        -0.05, -0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
-        0.05, -0.05, -0.2, 1.0, 0.0, 1.0, 1.0,
-        -0.05, 0.05, -0.2, 1.0, 1.0, 0.0, 1.0,
+        -0.05, -0.05, 0.2, 1.0, 1.0, 1.0, 0.0,
+        0.05, -0.05, 0.2, 1.0, 0.0, 1.0, 1.0,
+        -0.05, 0.05, 0.2, 1.0, 1.0, 0.0, 1.0,
 
-        0.05, -0.05, -0.2, 1.0, 0.0, 1.0, 1.0,
-        -0.05, 0.05, -0.2, 1.0, 1.0, 0.0, 1.0,
-        0.05, 0.05, -0.2, 1.0, 1.0, 1.0, 0.0
+        0.05, -0.05, 0.2, 1.0, 0.0, 1.0, 1.0,
+        -0.05, 0.05, 0.2, 1.0, 1.0, 0.0, 1.0,
+        0.05, 0.05, 0.2, 1.0, 1.0, 1.0, 0.0
     ])
 
     updateInfo('EnderDragon', 'Tail', EnderDragonTail_Vertices);
@@ -622,18 +716,14 @@ function drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, idx) {
     // modelMatrix.translate(EnderDragonPos[0], EnderDragonPos[1], EnderDragonPos[2]);
     switch (idx) {
         case 1:
-            modelMatrix.translate(0, 0, -0.22);
+            modelMatrix.translate(0, 0, 0.22);
             break;
-        case 2:
-            modelMatrix.translate(0, 0, -0.18);
-            break;
-        case 3:
-            modelMatrix.translate(0, 0, -0.18);
-            break;
+        default:
+            modelMatrix.translate(0, 0, 0.18);
     }
     // modelMatrix.translate(0, 0, -0.2);
     // modelMatrix.translate(0, 0, 0);
-    // modelMatrix.scale(config.EnderDragon.Tail.Size, config.EnderDragon.Tail.Size, config.EnderDragon.Tail.Size);
+    // modelMatrix.scale(config.EnderDragon.Size, config.EnderDragon.Size, config.EnderDragon.Size);
 
     // Rotate
     rotate(interval, 'EnderDragon', 'Tail');
@@ -643,6 +733,303 @@ function drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, idx) {
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Tail.position, Info.EnderDragon.Tail.n);
     // modelMatrix = popMatrix();
+}
+
+function defEnderDragonWing1_1() {
+    let x = 0.4;
+    let y = 0.05;
+    let EnderDragonWing1_Vertices = new Float32Array([
+        // front
+        0, -y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, y, 0, 1.0, 1, 1, 0, // 2
+
+        x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+
+        // right
+        x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+
+        x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+        x, y, -2 * y, 1.0, 0, 191 / 255, 1, // 7
+
+        // left
+        0, -y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+
+        // up
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+
+        x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+        x, y, -2 * y, 1.0, 0, 191 / 255, 1, // 7
+
+        // down
+        0, -y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+
+        x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+        x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+
+        // rear
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+        x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+
+        x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+        x, y, -2 * y, 1.0, 0, 191 / 255, 1, // 7
+
+        // Joint1
+        0, (3 / 4) * y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
+        (1 / 4) * x, (3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0, // 2
+
+        0, -(3 / 4) * y, 0, 1.0, 0.0, 0.0, 0.5,
+        x, -(3 / 4) * y, 0, 1.0, 0.0, 250 / 255, 0,
+        (1 / 4) * x, -(3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0,
+
+        x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
+        (1 / 4) * x, (3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0, // 2
+        (1 / 2) * x, (1 / 2) * y, (3 / 4) * x, 1.0, 0, 1, 0, // 3
+
+        x, -(3 / 4) * y, 0, 1.0, 0.0, 250 / 255, 0,
+        (1 / 4) * x, -(3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0,
+        (1 / 2) * x, -(1 / 2) * y, (3 / 4) * x, 1.0, 1, 1, 0,
+
+        x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
+        (1 / 2) * x, (1 / 2) * y, (3 / 4) * x, 1.0, 0, 1, 0, // 3
+        x, (1 / 2) * y, x, 1.0, 0, 0, 1, // 4
+
+        x, -(3 / 4) * y, 0, 1.0, 1, 0, 0,
+        (1 / 2) * x, -(1 / 2) * y, (3 / 4) * x, 1.0, 0, 1, 0,
+        x, -(1 / 2) * y, x, 1.0, 0, 0, 1
+    ])
+
+    updateInfo('EnderDragon', 'Wing1_1', EnderDragonWing1_Vertices);
+}
+
+function drawEnderDragonWing1_1(interval, modelMatrix, u_ModelMatrix) {
+    modelMatrix.translate(0.1, 0, -0.15);
+
+    // Rotate
+    rotate(interval, 'EnderDragon', 'Wing1');
+
+    modelMatrix.rotate(config.EnderDragon.Wing1.angle, 0, 0, 1);
+
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Wing1_1.position, Info.EnderDragon.Wing1_1.n);
+}
+
+function defEnderDragonWing1_2() {
+    let x = 0.4;
+    let y = 0.05;
+    let EnderDragonWing1_Vertices = new Float32Array([
+        // front
+        0, -y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        -x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, y, 0, 1.0, 1, 1, 0, // 2
+
+        -x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        -x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+
+        // right
+        -x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        -x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        -x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+
+        -x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        -x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+        -x, y, -2 * y, 1.0, 0, 191 / 255, 1, // 7
+
+        // left
+        0, -y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+
+        // up
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        -x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+
+        -x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+        -x, y, -2 * y, 1.0, 0, 191 / 255, 1, // 7
+
+        // down
+        0, -y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        -x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+
+        -x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+        -x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+
+        // rear
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+        -x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+
+        -x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+        -x, y, -2 * y, 1.0, 0, 191 / 255, 1, // 7
+
+        // Joint1
+        0, (3 / 4) * y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        -x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
+        -(1 / 4) * x, (3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0, // 2
+
+        0, -(3 / 4) * y, 0, 1.0, 0.0, 0.0, 0.5,
+        -x, -(3 / 4) * y, 0, 1.0, 0.0, 250 / 255, 0,
+        -(1 / 4) * x, -(3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0,
+
+        -x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
+        -(1 / 4) * x, (3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0, // 2
+        -(1 / 2) * x, (1 / 2) * y, (3 / 4) * x, 1.0, 0, 1, 0, // 3
+
+        -x, -(3 / 4) * y, 0, 1.0, 0.0, 250 / 255, 0,
+        -(1 / 4) * x, -(3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0,
+        -(1 / 2) * x, -(1 / 2) * y, (3 / 4) * x, 1.0, 1, 1, 0,
+
+        -x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
+        -(1 / 2) * x, (1 / 2) * y, (3 / 4) * x, 1.0, 0, 1, 0, // 3
+        -x, (1 / 2) * y, x, 1.0, 0, 0, 1, // 4
+
+        -x, -(3 / 4) * y, 0, 1.0, 1, 0, 0,
+        -(1 / 2) * x, -(1 / 2) * y, (3 / 4) * x, 1.0, 0, 1, 0,
+        -x, -(1 / 2) * y, x, 1.0, 0, 0, 1
+    ])
+
+    updateInfo('EnderDragon', 'Wing1_2', EnderDragonWing1_Vertices);
+}
+
+function drawEnderDragonWing1_2(interval, modelMatrix, u_ModelMatrix) {
+    modelMatrix.translate(-0.1, 0, -0.15);
+
+    // Rotate
+    // rotate(interval, 'EnderDragon', 'Wing1');
+
+    modelMatrix.rotate(-config.EnderDragon.Wing1.angle, 0, 0, 1);
+
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Wing1_2.position, Info.EnderDragon.Wing1_2.n);
+}
+
+function defEnderDragonWing2() {
+    let x = 0.4;
+    let y = 0.05;
+    let EnderDragonWing2_Vertices = new Float32Array([
+        // front
+        0, -y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, y, 0, 1.0, 1, 1, 0, // 2
+
+        x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+
+        // right
+        x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+
+        x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+        x, y, -2 * y, 1.0, 0, 191 / 255, 1, // 7
+
+        // left
+        0, -y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+
+        // up
+        0, y, 0, 1.0, 1, 1, 0, // 2
+        x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+
+        x, y, 0, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+        x, y, -2 * y, 1.0, 0, 191 / 255, 1, // 7
+
+        // down
+        0, -y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+
+        x, -y, 0, 1.0, 0.0, 250 / 255, 0, // 1
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+        x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+
+        // rear
+        0, -y, -2 * y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
+        x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+
+        x, -y, -2 * y, 1.0, 1, 0, 1, // 5
+        0, y, -2 * y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
+        x, y, -2 * y, 1.0, 0, 191 / 255, 1, // 7
+
+        // Joint1
+        0, (3 / 4) * y, 0, 1.0, 0.0, 0.0, 0.5, // 0
+        x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
+        (1 / 4) * x, (3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0, // 2
+
+        0, -(3 / 4) * y, 0, 1.0, 0.0, 0.0, 0.5,
+        x, -(3 / 4) * y, 0, 1.0, 0.0, 250 / 255, 0,
+        (1 / 4) * x, -(3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0,
+
+        x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
+        (1 / 4) * x, (3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0, // 2
+        (1 / 2) * x, (1 / 2) * y, (3 / 4) * x, 1.0, 0, 1, 0, // 3
+
+        x, -(3 / 4) * y, 0, 1.0, 0.0, 250 / 255, 0,
+        (1 / 4) * x, -(3 / 4) * y, (1 / 8) * x, 1.0, 1, 1, 0,
+        (1 / 2) * x, -(1 / 2) * y, (3 / 4) * x, 1.0, 1, 1, 0,
+
+        x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
+        (1 / 2) * x, (1 / 2) * y, (3 / 4) * x, 1.0, 0, 1, 0, // 3
+        x, (1 / 2) * y, x, 1.0, 0, 0, 1, // 4
+
+        x, -(3 / 4) * y, 0, 1.0, 1, 0, 0,
+        (1 / 2) * x, -(1 / 2) * y, (3 / 4) * x, 1.0, 0, 1, 0,
+        x, -(1 / 2) * y, x, 1.0, 0, 0, 1
+    ])
+
+    updateInfo('EnderDragon', 'Wing2', EnderDragonWing2_Vertices);
+}
+
+function drawEnderDragonWing2(interval, modelMatrix, u_ModelMatrix) {
+    modelMatrix.translate(0.2, 0, -0.2);
+
+    // Rotate
+    rotate(interval, 'EnderDragon', 'Wing1');
+
+    modelMatrix.rotate(config.EnderDragon.Wing1.angle, 0, 0, 1);
+
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Wing2.position, Info.EnderDragon.Wing2.n);
 }
 
 function rotate(interval, Level1, Level2) {
