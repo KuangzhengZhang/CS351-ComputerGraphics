@@ -8,7 +8,7 @@ function drawCloverStem(interval, modelMatrix, u_ModelMatrix, idx) {
     // Rotate
     rotate(interval, 'Clover', 'Stem');
 
-    modelMatrix.rotate(config.Clover.Stem.angle, 0, 0, 1);
+    modelMatrix.rotate(config.Clover.Stem.angle, 0, 1, 0);
     // console.log(config)
 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
@@ -149,7 +149,7 @@ function drawCloverPetal(interval, modelMatrix, u_ModelMatrix, idx) {
     // Rotate
     modelMatrix.rotate(360 / config.Clover.Petal.Num, 0, 0, 1);
     if (idx === 1) {
-        if (!config.Clover.Pause && !config.Clover.Petal.Pause) {
+        if (!config.Env.Pause && !config.Clover.Pause && !config.Clover.Petal.Pause) {
             config.Clover.Petal.angle += (config.Clover.Petal.rotSpeed * interval) / 1000.0;
             config.Clover.Petal.angle %= config.Clover.Petal.rotMaxAngle - config.Clover.Petal.rotMinAngle;
         }

@@ -1,94 +1,103 @@
 let Config = function () {
-    // Env
     this.Env = {
+        Pause: true,
         bgClr: [0, 229, 238, 1],
+
         Width: 650,
-        Height: 650,
-        mode: 'Drag'
+        Height: 650
     }
 
-    // EnderDragon
     this.EnderDragon = {
-        Pause: true,
+        Pause: false,
         Size: 1,
         Body: {
             Pause: false,
             Clr: [78, 42, 132, 1],
+            Size: 1,
             trackSpeed: 60,
             rotSpeed: 45,
-            angle: 0,
-            rotDir: true,
             rotMaxAngle: 180,
-            rotMinAngle: -180
+            rotMinAngle: -180,
+
+            angle: 0,
+            rotDir: true
         },
         Tail: {
             Pause: false,
-            Num: 5,
-            Size: 0.9,
             Clr: [78, 42, 132, 1],
+            Size: 0.9,
+            Num: 5,
             rotSpeed: 10,
-            angle: 0,
-            rotDir: true,
             rotMaxAngle: 15,
-            rotMinAngle: -15
+            rotMinAngle: -15,
+
+            angle: 0,
+            rotDir: true
         },
         Wing1: {
             Pause: false,
             Clr: [78, 42, 132, 1],
             Size: 1,
             rotSpeed: 45,
-            angle: 0,
-            rotDir: true,
             rotMaxAngle: 15,
-            rotMinAngle: -15
+            rotMinAngle: -15,
+
+            angle: 0,
+            rotDir: true
         },
         Wing2: {
             Pause: false,
             Clr: [78, 42, 132, 1],
             Size: 1,
             rotSpeed: 45,
-            angle: 0,
-            rotDir: true,
             rotMaxAngle: 15,
-            rotMinAngle: -15
+            rotMinAngle: -15,
+
+            angle: 0,
+            rotDir: true
         }
     }
-    // Clover
+
     this.Clover = {
         Pause: false,
         Size: 1,
         Stem: {
             Pause: false,
+            Clr: [78, 42, 132, 1],
+            Size: 1,
             Num: 4,
             L: 0.15,
             R: 0.02,
             capVerts: 8,
-            Clr: [78, 42, 132, 1],
             trackSpeed: 60,
             rotSpeed: 1,
+            rotMaxAngle: 30,
+            rotMinAngle: -30,
+
             angle: 0,
-            rotDir: true,
-            rotMaxAngle: 5,
-            rotMinAngle: -5
+            rotDir: true
         },
         Stamen: {
             Pause: false,
             Clr: [78, 42, 132, 1],
+            Size: 1,
             trackSpeed: 60,
             rotSpeed: 45,
-            angle: 0,
-            rotDir: true,
             rotMaxAngle: 60,
             rotMinAngle: -60,
             L: 0.1,
             H: 0.2,
             R: 0.2,
-            capVerts: 8
+            capVerts: 8,
+
+            angle: 0,
+            rotDir: true,
         },
         Petal: {
             Pause: false,
-            Num: 3,
             Clr: [78, 42, 132, 1],
+            Size: 1,
+            Num: 3,
             trackSpeed: 60,
             rotSpeed: 45,
             angle: 0,
@@ -204,10 +213,10 @@ function initCfg() {
 
     // Env
     let Env = gui.addFolder('Env');
+    Env.add(config.Env, 'Pause').listen();
     Env.addColor(config.Env, 'bgClr').listen();
-    Env.add(config.Env, 'Width', 0, 1000).listen();
-    Env.add(config.Env, 'Height', 0, 1000).listen();
-    Env.add(config.Env, 'mode', ['Drag', '111']).listen();
+    // Env.add(config.Env, 'Width', 0, 1000).listen();
+    // Env.add(config.Env, 'Height', 0, 1000).listen();
     Env.open();
 
     // EnderDragon
@@ -232,9 +241,9 @@ function initCfg() {
     // EnderDragonTail
     let EnderDragonTail = EnderDragon.addFolder('Tail');
     EnderDragonTail.add(config.EnderDragon.Tail, 'Pause').listen();
-    EnderDragonTail.add(config.EnderDragon.Tail, 'Num', 1, 5).listen();
-    EnderDragonTail.add(config.EnderDragon.Tail, 'Size', 0, 1).listen();
     EnderDragonTail.addColor(config.EnderDragon.Tail, 'Clr').listen();
+    EnderDragonTail.add(config.EnderDragon.Tail, 'Num', 1, 5, 1).listen();
+    EnderDragonTail.add(config.EnderDragon.Tail, 'Size', 0, 1).listen();
     EnderDragonTail.add(config.EnderDragon.Tail, 'rotSpeed', 0, 50).listen();
     EnderDragonTail.add(config.EnderDragon.Tail, 'rotMinAngle', -90, 90).listen().onChange(() => {
         gui.__folders.EnderDragon.__folders.Tail.__controllers[6].__min = config.EnderDragon.Tail.rotMinAngle + 1;
@@ -248,6 +257,7 @@ function initCfg() {
     let EnderDragonWing1 = EnderDragon.addFolder('Wing1');
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'Pause').listen();
     EnderDragonWing1.addColor(config.EnderDragon.Wing1, 'Clr').listen();
+    EnderDragonWing1.add(config.EnderDragon.Wing1, 'Size', 0, 1).listen();
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotSpeed', 0, 50).listen();
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotMinAngle', -90, 90).listen().onChange(() => {
         gui.__folders.EnderDragon.__folders.Wing1.__controllers[4].__min = config.EnderDragon.Wing1.rotMinAngle + 1;
@@ -256,25 +266,48 @@ function initCfg() {
         }
     });
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotMaxAngle', config.EnderDragon.Wing1.rotMinAngle, 90).listen();
-    EnderDragon.open();
 
-    // EnderDragonWing2
-    let EnderDragonWing2 = EnderDragon.addFolder('Wing2');
-    EnderDragonWing2.add(config.EnderDragon.Wing2, 'Pause').listen();
-    EnderDragonWing2.addColor(config.EnderDragon.Wing2, 'Clr').listen();
-    EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotSpeed', 0, 50).listen();
-    EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotMinAngle', -90, 90).listen().onChange(() => {
-        gui.__folders.EnderDragon.__folders.Wing2.__controllers[4].__min = config.EnderDragon.Wing2.rotMinAngle + 1;
-        if (config.EnderDragon.Wing2.rotMaxAngle <= config.EnderDragon.Wing2.rotMinAngle) {
-            config.EnderDragon.Wing2.rotMaxAngle = config.EnderDragon.Wing2.rotMinAngle + 1;
-        }
-    });
-    EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotMaxAngle', config.EnderDragon.Wing2.rotMinAngle, 90).listen();
+    // // EnderDragonWing2
+    // let EnderDragonWing2 = EnderDragon.addFolder('Wing2');
+    // EnderDragonWing2.add(config.EnderDragon.Wing2, 'Pause').listen();
+    // EnderDragonWing2.addColor(config.EnderDragon.Wing2, 'Clr').listen();
+    // EnderDragonWing2.add(config.EnderDragon.Wing2, 'Size', 0, 1).listen();
+    // EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotSpeed', 0, 50).listen();
+    // EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotMinAngle', -90, 90).listen().onChange(() => {
+    //     gui.__folders.EnderDragon.__folders.Wing2.__controllers[4].__min = config.EnderDragon.Wing2.rotMinAngle + 1;
+    //     if (config.EnderDragon.Wing2.rotMaxAngle <= config.EnderDragon.Wing2.rotMinAngle) {
+    //         config.EnderDragon.Wing2.rotMaxAngle = config.EnderDragon.Wing2.rotMinAngle + 1;
+    //     }
+    // });
+    // EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotMaxAngle', config.EnderDragon.Wing2.rotMinAngle, 90).listen();
+
     EnderDragon.open();
 
     // Clover
     let Clover = gui.addFolder('Clover');
-    // Clover.add(config.Clover, 'speed', -10, 10).listen();
+    Clover.add(config.Clover, 'Pause').listen();
+    Clover.add(config.Clover, 'Size', 0, 1).listen();
+
+    // CloverStem
+    let CloverStem = Clover.addFolder('Stem');
+    CloverStem.add(config.Clover.Stem, 'Pause').listen();
+    CloverStem.addColor(config.Clover.Stem, 'Clr').listen();
+    CloverStem.add(config.Clover.Stem, 'Num', 1, 5, 1).listen();
+    // CloverStem.add(config.Clover.Stem, 'L', 0.1, 0.3).listen();
+    // CloverStem.add(config.Clover.Stem, 'R', 0.01, 0.1).listen();
+    // CloverStem.add(config.Clover.Stem, 'capVerts', 3, 10).listen();
+
+    // CloverStamen
+    let CloverStamen = Clover.addFolder('Stamen');
+    CloverStamen.add(config.Clover.Stamen, 'Pause').listen();
+    CloverStamen.addColor(config.Clover.Stamen, 'Clr').listen();
+    CloverStamen.add(config.Clover.Stamen, 'Size', 0, 1).listen();
+
+    // CloverPetal
+    let CloverPetal = Clover.addFolder('Petal');
+    CloverPetal.add(config.Clover.Petal, 'Pause').listen();
+    CloverPetal.addColor(config.Clover.Petal, 'Clr').listen();
+    CloverPetal.add(config.Clover.Petal, 'Num', 1, 6, 1).listen();
     Clover.open();
 }
 
@@ -362,6 +395,8 @@ function keyDown(event) {
         case 'ArrowRight':
             EnderDragonPos[0] += 0.01;
             break;
+        case 'Space':
+            config.Env.Pause = !config.Env.Pause;
     }
 }
 
@@ -665,7 +700,7 @@ function updateInfo(Level1, Level2, Vertices) {
 function rotate(interval, Level1, Level2) {
     let rotAngle = (config[Level1][Level2].rotSpeed * interval) / 1000.0;
     rotAngle %= config[Level1][Level2].rotMaxAngle - config[Level1][Level2].rotMinAngle;
-    if (!config[Level1].Pause && !config[Level1][Level2].Pause) {
+    if (!config.Env.Pause && !config[Level1].Pause && !config[Level1][Level2].Pause) {
         if (config[Level1][Level2].rotDir) {
             if (rotAngle + config[Level1][Level2].angle > config[Level1][Level2].rotMaxAngle) {
                 config[Level1][Level2].angle = config[Level1][Level2].rotMaxAngle - (rotAngle - (config[Level1][Level2].rotMaxAngle - config[Level1][Level2].angle));

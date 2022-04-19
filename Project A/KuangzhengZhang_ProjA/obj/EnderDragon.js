@@ -1,66 +1,9 @@
 function defEnderDragonBody() {
     defCylinderZ(L = 0.25, r = 0.1, capVerts = 10, Level1 = 'EnderDragon', Level2 = 'Body');
-    // let EnderDragonBody_Vertices = new Float32Array([
-    //     // front
-    //     -0.1, -0.1, 0.25, 1.0, 1.0, 0.0, 0.0,
-    //     0.1, -0.1, 0.25, 1.0, 0.0, 1.0, 0.0,
-    //     -0.1, 0.1, 0.25, 1.0, 0.0, 0.0, 1.0,
-
-    //     0.1, -0.1, 0.25, 1.0, 0.0, 1.0, 0.0,
-    //     -0.1, 0.1, 0.25, 1.0, 0.0, 0.0, 1.0,
-    //     0.1, 0.1, 0.25, 1.0, 1.0, 0.0, 0.0,
-
-    //     // right
-    //     0.1, -0.1, 0.25, 1.0, 0.0, 1.0, 0.0,
-    //     0.1, 0.1, 0.25, 1.0, 1.0, 0.0, 0.0,
-    //     0.1, -0.1, -0.25, 1.0, 0.0, 1.0, 0.0,
-
-    //     0.1, 0.1, 0.25, 1.0, 1.0, 0.0, 0.0,
-    //     0.1, -0.1, -0.25, 1.0, 0.0, 1.0, 0.0,
-    //     0.1, 0.1, -0.25, 1.0, 1.0, 0.0, 0.0,
-
-    //     // left
-    //     -0.1, -0.1, 0.25, 1.0, 1.0, 0.0, 0.0,
-    //     -0.1, 0.1, 0.25, 1.0, 0.0, 0.0, 1.0,
-    //     -0.1, -0.1, -0.25, 1.0, 1.0, 0.0, 0.0,
-
-    //     -0.1, 0.1, 0.25, 1.0, 0.0, 0.0, 1.0,
-    //     -0.1, -0.1, -0.25, 1.0, 1.0, 0.0, 0.0,
-    //     -0.1, 0.1, -0.25, 1.0, 0.0, 0.0, 1.0,
-
-    //     // up
-    //     -0.1, 0.1, 0.25, 1.0, 0.0, 0.0, 1.0,
-    //     0.1, 0.1, 0.25, 1.0, 1.0, 0.0, 0.0,
-    //     -0.1, 0.1, -0.25, 1.0, 0.0, 0.0, 1.0,
-
-    //     0.1, 0.1, 0.25, 1.0, 1.0, 0.0, 0.0,
-    //     -0.1, 0.1, -0.25, 1.0, 0.0, 0.0, 1.0,
-    //     0.1, 0.1, -0.25, 1.0, 1.0, 0.0, 0.0,
-
-    //     // down
-    //     -0.1, -0.1, 0.25, 1.0, 1.0, 0.0, 0.0,
-    //     0.1, -0.1, 0.25, 1.0, 0.0, 1.0, 0.0,
-    //     -0.1, -0.1, -0.25, 1.0, 1.0, 0.0, 0.0,
-
-    //     0.1, -0.1, 0.25, 1.0, 0.0, 1.0, 0.0,
-    //     -0.1, -0.1, -0.25, 1.0, 1.0, 0.0, 0.0,
-    //     0.1, -0.1, -0.25, 1.0, 0.0, 1.0, 0.0,
-
-    //     // rear
-    //     -0.1, -0.1, -0.25, 1.0, 1.0, 0.0, 0.0,
-    //     0.1, -0.1, -0.25, 1.0, 0.0, 1.0, 0.0,
-    //     -0.1, 0.1, -0.25, 1.0, 0.0, 0.0, 1.0,
-
-    //     0.1, -0.1, -0.25, 1.0, 0.0, 1.0, 0.0,
-    //     -0.1, 0.1, -0.25, 1.0, 0.0, 0.0, 1.0,
-    //     0.1, 0.1, -0.25, 1.0, 1.0, 0.0, 0.0
-    // ])
-
-    // updateInfo('EnderDragon', 'Body', EnderDragonBody_Vertices);
 }
 
 function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix) {
-    if (!dragMode && mousePos[0] && mousePos[1] && (Math.abs(mousePos[0] - EnderDragonPos[0]) > 0.01 || Math.abs(mousePos[1] - EnderDragonPos[1]) > 0.01)) {
+    if (!config.Env.Pause && !dragMode && mousePos[0] && mousePos[1] && (Math.abs(mousePos[0] - EnderDragonPos[0]) > 0.01 || Math.abs(mousePos[1] - EnderDragonPos[1]) > 0.01)) {
         let dx, dy, distance;
         dx = mousePos[0] - EnderDragonPos[0];
         dy = mousePos[1] - EnderDragonPos[1];
@@ -85,7 +28,7 @@ function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix) {
     modelMatrix.scale(config.EnderDragon.Size, config.EnderDragon.Size, config.EnderDragon.Size);
 
     // Rotate
-    // if (!config.EnderDragon.Pause && !config.EnderDragon.Body.Pause) {
+    // if (!config.Env.Pause && !config.EnderDragon.Pause && !config.EnderDragon.Body.Pause) {
     //     config.EnderDragon.Body.angle += (config.EnderDragon.Body.rotSpeed * interval) / 1000.0;
     //     config.EnderDragon.Body.angle %= config.EnderDragon.Body.rotMaxAngle - config.EnderDragon.Body.rotMinAngle;
     // }
@@ -160,8 +103,6 @@ function defEnderDragonTail() {
 }
 
 function drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, idx) {
-    // pushMatrix(modelMatrix);
-    // modelMatrix.translate(EnderDragonPos[0], EnderDragonPos[1], EnderDragonPos[2]);
     switch (idx) {
         case 1:
             modelMatrix.translate(0, 0, -0.22);
@@ -169,8 +110,6 @@ function drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, idx) {
         default:
             modelMatrix.translate(0, 0, -0.18);
     }
-    // modelMatrix.translate(0, 0, -0.2);
-    // modelMatrix.translate(0, 0, 0);
     modelMatrix.scale(config.EnderDragon.Tail.Size, config.EnderDragon.Tail.Size, config.EnderDragon.Tail.Size);
 
     // Rotate
@@ -186,87 +125,6 @@ function defEnderDragonWing1() {
     let x = 0.4;
     let y = 0.05;
     let EnderDragonWing1_Vertices = new Float32Array([
-        // // front
-        // 0, -y, y, 1.0, 0.0, 0.0, 0.5, // 0
-        // x, -y, y, 1.0, 0.0, 250 / 255, 0, // 1
-        // 0, y, y, 1.0, 1, 1, 0, // 2
-
-        // x, -y, y, 1.0, 0.0, 250 / 255, 0, // 1
-        // 0, y, y, 1.0, 1, 1, 0, // 2
-        // x, y, y, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
-
-        // // right
-        // x, -y, y, 1.0, 0.0, 250 / 255, 0, // 1
-        // x, y, y, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
-        // x, -y, -y, 1.0, 1, 0, 1, // 5
-
-        // x, y, y, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
-        // x, -y, -y, 1.0, 1, 0, 1, // 5
-        // x, y, -y, 1.0, 0, 191 / 255, 1, // 7
-
-        // // left
-        // 0, -y, y, 1.0, 0.0, 0.0, 0.5, // 0
-        // 0, y, y, 1.0, 1, 1, 0, // 2
-        // 0, -y, -y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
-
-        // 0, y, y, 1.0, 1, 1, 0, // 2
-        // 0, -y, -y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
-        // 0, y, -y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
-
-        // // up
-        // 0, y, y, 1.0, 1, 1, 0, // 2
-        // x, y, y, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
-        // 0, y, -y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
-
-        // x, y, y, 1.0, 139 / 255, 36 / 255, 19 / 255, // 3
-        // 0, y, -y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
-        // x, y, -y, 1.0, 0, 191 / 255, 1, // 7
-
-        // // down
-        // 0, -y, y, 1.0, 0.0, 0.0, 0.5, // 0
-        // x, -y, y, 1.0, 0.0, 250 / 255, 0, // 1
-        // 0, -y, -y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
-
-        // x, -y, y, 1.0, 0.0, 250 / 255, 0, // 1
-        // 0, -y, -y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
-        // x, -y, -y, 1.0, 1, 0, 1, // 5
-
-        // // rear
-        // 0, -y, -y, 1.0, 178 / 255, 34 / 255, 34 / 255, // 4
-        // x, -y, -y, 1.0, 1, 0, 1, // 5
-        // 0, y, -y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
-
-        // x, -y, -y, 1.0, 1, 0, 1, // 5
-        // 0, y, -y, 1.0, 160 / 255, 32 / 255, 240 / 255, // 6
-        // x, y, -y, 1.0, 0, 191 / 255, 1, // 7
-
-        // // Joint1
-        // 0, (3 / 4) * y, 0, 1.0, 0.0, 0.0, 0.5, // 0
-        // x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
-        // (1 / 4) * x, (3 / 4) * y, -(2 / 8) * x, 1.0, 1, 1, 0, // 2
-
-        // 0, -(3 / 4) * y, 0, 1.0, 0.0, 0.0, 0.5,
-        // x, -(3 / 4) * y, 0, 1.0, 0.0, 250 / 255, 0,
-        // (1 / 4) * x, -(3 / 4) * y, -(2 / 8) * x, 1.0, 1, 1, 0,
-
-        // x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
-        // (1 / 4) * x, (3 / 4) * y, -(2 / 8) * x, 1.0, 1, 1, 0, // 2
-        // (1 / 2) * x, (1 / 2) * y, -(3 / 4) * x, 1.0, 0, 1, 0, // 3
-
-        // x, -(3 / 4) * y, 0, 1.0, 0.0, 250 / 255, 0,
-        // (1 / 4) * x, -(3 / 4) * y, -(2 / 8) * x, 1.0, 1, 1, 0,
-        // (1 / 2) * x, -(1 / 2) * y, -(3 / 4) * x, 1.0, 1, 1, 0,
-
-        // x, (3 / 4) * y, 0, 1.0, 1, 0, 0, // 1
-        // (1 / 2) * x, (1 / 2) * y, -(3 / 4) * x, 1.0, 0, 1, 0, // 3
-        // x, (1 / 2) * y, -x, 1.0, 0, 0, 1, // 4
-
-        // x, -(3 / 4) * y, 0, 1.0, 1, 0, 0,
-        // (1 / 2) * x, -(1 / 2) * y, -(3 / 4) * x, 1.0, 0, 1, 0,
-        // x, -(1 / 2) * y, -x, 1.0, 0, 0, 1,
-
-        // // Enclose
-
         0.0, -0.05, 0.05, 1.0, 0.0, -0.0, 1.0,
         0.4, -0.05, 0.05, 1.0, 0.0, -0.0, 1.0,
         0.0, 0.05, 0.05, 1.0, 0.0, -0.0, 1.0,
