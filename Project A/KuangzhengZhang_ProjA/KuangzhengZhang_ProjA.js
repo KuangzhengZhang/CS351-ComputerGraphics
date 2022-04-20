@@ -19,6 +19,11 @@ let Config = function () {
             rotMaxAngle: 180,
             rotMinAngle: -180,
 
+            L: 0.25,
+            R: 0.1,
+            H: 0.25,
+            capVerts: 10,
+
             angle: 0,
             rotDir: true
         },
@@ -66,13 +71,13 @@ let Config = function () {
             Clr: [78, 42, 132, 1],
             Size: 1,
             Num: 4,
+            rotSpeed: 10,
+            rotMaxAngle: 10,
+            rotMinAngle: -10,
+
             L: 0.15,
             R: 0.02,
             capVerts: 8,
-            trackSpeed: 60,
-            rotSpeed: 1,
-            rotMaxAngle: 30,
-            rotMinAngle: -30,
 
             angle: 0,
             rotDir: true
@@ -83,12 +88,13 @@ let Config = function () {
             Size: 1,
             trackSpeed: 60,
             rotSpeed: 45,
-            rotMaxAngle: 60,
-            rotMinAngle: -60,
+            rotMaxAngle: 180,
+            rotMinAngle: -180,
+
             L: 0.1,
             H: 0.2,
             R: 0.2,
-            capVerts: 8,
+            capVerts: 12,
 
             angle: 0,
             rotDir: true,
@@ -222,7 +228,7 @@ function initCfg() {
     // EnderDragon
     let EnderDragon = gui.addFolder('EnderDragon');
     EnderDragon.add(config.EnderDragon, 'Pause').listen();
-    EnderDragon.add(config.EnderDragon, 'Size', 0, 1).listen();
+    EnderDragon.add(config.EnderDragon, 'Size', 0, 2).listen();
 
     // EnderDragonBody
     let EnderDragonBody = EnderDragon.addFolder('Body');
@@ -230,20 +236,20 @@ function initCfg() {
     EnderDragonBody.addColor(config.EnderDragon.Body, 'Clr').listen();
     EnderDragonBody.add(config.EnderDragon.Body, 'trackSpeed', 0, 180).listen();
     EnderDragonBody.add(config.EnderDragon.Body, 'rotSpeed', 0, 180).listen();
-    EnderDragonBody.add(config.EnderDragon.Body, 'rotMinAngle', -90, 90).listen().onChange(() => {
-        gui.__folders.EnderDragon.__folders.Body.__controllers[4].__min = config.EnderDragon.Body.rotMinAngle + 1;
-        if (config.EnderDragon.Body.rotMaxAngle <= config.EnderDragon.Body.rotMinAngle) {
-            config.EnderDragon.Body.rotMaxAngle = config.EnderDragon.Body.rotMinAngle + 1;
-        }
-    });
-    EnderDragonBody.add(config.EnderDragon.Body, 'rotMaxAngle', config.EnderDragon.Body.rotMinAngle, 90).listen();
+    // EnderDragonBody.add(config.EnderDragon.Body, 'rotMinAngle', -90, 90).listen().onChange(() => {
+    //     gui.__folders.EnderDragon.__folders.Body.__controllers[4].__min = config.EnderDragon.Body.rotMinAngle + 1;
+    //     if (config.EnderDragon.Body.rotMaxAngle <= config.EnderDragon.Body.rotMinAngle) {
+    //         config.EnderDragon.Body.rotMaxAngle = config.EnderDragon.Body.rotMinAngle + 1;
+    //     }
+    // });
+    // EnderDragonBody.add(config.EnderDragon.Body, 'rotMaxAngle', config.EnderDragon.Body.rotMinAngle, 90).listen();
 
     // EnderDragonTail
     let EnderDragonTail = EnderDragon.addFolder('Tail');
     EnderDragonTail.add(config.EnderDragon.Tail, 'Pause').listen();
     EnderDragonTail.addColor(config.EnderDragon.Tail, 'Clr').listen();
     EnderDragonTail.add(config.EnderDragon.Tail, 'Num', 1, 5, 1).listen();
-    EnderDragonTail.add(config.EnderDragon.Tail, 'Size', 0, 1).listen();
+    EnderDragonTail.add(config.EnderDragon.Tail, 'Size', 0, 2).listen();
     EnderDragonTail.add(config.EnderDragon.Tail, 'rotSpeed', 0, 50).listen();
     EnderDragonTail.add(config.EnderDragon.Tail, 'rotMinAngle', -90, 90).listen().onChange(() => {
         gui.__folders.EnderDragon.__folders.Tail.__controllers[6].__min = config.EnderDragon.Tail.rotMinAngle + 1;
@@ -257,7 +263,7 @@ function initCfg() {
     let EnderDragonWing1 = EnderDragon.addFolder('Wing1');
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'Pause').listen();
     EnderDragonWing1.addColor(config.EnderDragon.Wing1, 'Clr').listen();
-    EnderDragonWing1.add(config.EnderDragon.Wing1, 'Size', 0, 1).listen();
+    EnderDragonWing1.add(config.EnderDragon.Wing1, 'Size', 0, 2).listen();
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotSpeed', 0, 50).listen();
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotMinAngle', -90, 90).listen().onChange(() => {
         gui.__folders.EnderDragon.__folders.Wing1.__controllers[4].__min = config.EnderDragon.Wing1.rotMinAngle + 1;
@@ -266,33 +272,20 @@ function initCfg() {
         }
     });
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotMaxAngle', config.EnderDragon.Wing1.rotMinAngle, 90).listen();
-
-    // // EnderDragonWing2
-    // let EnderDragonWing2 = EnderDragon.addFolder('Wing2');
-    // EnderDragonWing2.add(config.EnderDragon.Wing2, 'Pause').listen();
-    // EnderDragonWing2.addColor(config.EnderDragon.Wing2, 'Clr').listen();
-    // EnderDragonWing2.add(config.EnderDragon.Wing2, 'Size', 0, 1).listen();
-    // EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotSpeed', 0, 50).listen();
-    // EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotMinAngle', -90, 90).listen().onChange(() => {
-    //     gui.__folders.EnderDragon.__folders.Wing2.__controllers[4].__min = config.EnderDragon.Wing2.rotMinAngle + 1;
-    //     if (config.EnderDragon.Wing2.rotMaxAngle <= config.EnderDragon.Wing2.rotMinAngle) {
-    //         config.EnderDragon.Wing2.rotMaxAngle = config.EnderDragon.Wing2.rotMinAngle + 1;
-    //     }
-    // });
-    // EnderDragonWing2.add(config.EnderDragon.Wing2, 'rotMaxAngle', config.EnderDragon.Wing2.rotMinAngle, 90).listen();
-
     EnderDragon.open();
 
     // Clover
     let Clover = gui.addFolder('Clover');
     Clover.add(config.Clover, 'Pause').listen();
-    Clover.add(config.Clover, 'Size', 0, 1).listen();
+    Clover.add(config.Clover, 'Size', 0, 2).listen();
 
     // CloverStem
     let CloverStem = Clover.addFolder('Stem');
     CloverStem.add(config.Clover.Stem, 'Pause').listen();
     CloverStem.addColor(config.Clover.Stem, 'Clr').listen();
-    CloverStem.add(config.Clover.Stem, 'Num', 1, 5, 1).listen();
+    CloverStem.add(config.Clover.Stem, 'Size', 0, 2).listen();
+    CloverStem.add(config.Clover.Stem, 'Num', 1, 10, 1).listen();
+    CloverStem.add(config.Clover.Stem, 'rotSpeed', 0, 180).listen();
     // CloverStem.add(config.Clover.Stem, 'L', 0.1, 0.3).listen();
     // CloverStem.add(config.Clover.Stem, 'R', 0.01, 0.1).listen();
     // CloverStem.add(config.Clover.Stem, 'capVerts', 3, 10).listen();
@@ -301,12 +294,14 @@ function initCfg() {
     let CloverStamen = Clover.addFolder('Stamen');
     CloverStamen.add(config.Clover.Stamen, 'Pause').listen();
     CloverStamen.addColor(config.Clover.Stamen, 'Clr').listen();
-    CloverStamen.add(config.Clover.Stamen, 'Size', 0, 1).listen();
+    CloverStamen.add(config.Clover.Stamen, 'Size', 0, 2).listen();
+    CloverStamen.add(config.Clover.Stamen, 'rotSpeed', 0, 180).listen();
 
     // CloverPetal
     let CloverPetal = Clover.addFolder('Petal');
     CloverPetal.add(config.Clover.Petal, 'Pause').listen();
     CloverPetal.addColor(config.Clover.Petal, 'Clr').listen();
+    CloverPetal.add(config.Clover.Petal, 'Size', 0, 2).listen();
     CloverPetal.add(config.Clover.Petal, 'Num', 1, 6, 1).listen();
     Clover.open();
 }
@@ -471,44 +466,43 @@ function initVertexBuffer() {
 }
 
 function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
+    modelMatrix.setIdentity();
+    colorMatrix.setIdentity();
+
     // Clear
     gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    colorMatrix.setTranslate(config.EnderDragon.Body.Clr[0] / 255, config.EnderDragon.Body.Clr[0] / 255, config.EnderDragon.Body.Clr[0] / 255);
-    gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
-
     // EnderDragon
     // Body
-    drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix);
+    drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
 
     // Tail
     pushMatrix(modelMatrix);
     for (let i = 1; i <= config.EnderDragon.Tail.Num; i++) {
-        drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, idx = i);
+        drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
     modelMatrix = popMatrix();
 
     // Wing
     pushMatrix(modelMatrix);
-    drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, idx = 1);
+    drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = 1);
     modelMatrix = popMatrix();
 
     pushMatrix(modelMatrix);
-    drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, idx = 2);
+    drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = 2);
     modelMatrix = popMatrix();
 
     // pushMatrix(modelMatrix);
     // modelMatrix = popMatrix();
     modelMatrix.setIdentity();
-    modelMatrix.translate(0, -1 - config.Clover.Stem.L, 0);
     for (let i = 1; i <= config.Clover.Stem.Num; i++) {
-        drawCloverStem(interval, modelMatrix, u_ModelMatrix, idx = i);
+        drawCloverStem(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
-    drawCloverStamen(interval, modelMatrix, u_ModelMatrix);
+    drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
 
     for (let i = 1; i <= config.Clover.Petal.Num; i++) {
-        drawCloverPetal(interval, modelMatrix, u_ModelMatrix, idx = i);
+        drawCloverPetal(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
 }
 
@@ -665,19 +659,9 @@ async function main() {
         return;
     }
 
-    modelMatrix.setIdentity();
-    colorMatrix.setIdentity();
-
     gl.enable(gl.DEPTH_TEST);
     gl.clearDepth(0.0);
     gl.depthFunc(gl.GREATER);
-    // Specify the color for clearing <canvas>
-    gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
-
-    // Clear <canvas>
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    gl.drawArrays(gl.TRIANGLES, 0, n);
 
     let tick = function () {
         let now = Date.now();
@@ -697,24 +681,31 @@ function updateInfo(Level1, Level2, Vertices) {
     Info.n += Info[Level1][Level2].n;
 }
 
-function rotate(interval, Level1, Level2) {
-    let rotAngle = (config[Level1][Level2].rotSpeed * interval) / 1000.0;
-    rotAngle %= config[Level1][Level2].rotMaxAngle - config[Level1][Level2].rotMinAngle;
-    if (!config.Env.Pause && !config[Level1].Pause && !config[Level1][Level2].Pause) {
-        if (config[Level1][Level2].rotDir) {
-            if (rotAngle + config[Level1][Level2].angle > config[Level1][Level2].rotMaxAngle) {
-                config[Level1][Level2].angle = config[Level1][Level2].rotMaxAngle - (rotAngle - (config[Level1][Level2].rotMaxAngle - config[Level1][Level2].angle));
-                config[Level1][Level2].rotDir = !config[Level1][Level2].rotDir;
+function rotate(interval, Level1, Level2, reciprocate) {
+    if (reciprocate) {
+        let rotAngle = (config[Level1][Level2].rotSpeed * interval) / 1000.0;
+        rotAngle %= config[Level1][Level2].rotMaxAngle - config[Level1][Level2].rotMinAngle;
+        if (!config.Env.Pause && !config[Level1].Pause && !config[Level1][Level2].Pause) {
+            if (config[Level1][Level2].rotDir) {
+                if (rotAngle + config[Level1][Level2].angle > config[Level1][Level2].rotMaxAngle) {
+                    config[Level1][Level2].angle = config[Level1][Level2].rotMaxAngle - (rotAngle - (config[Level1][Level2].rotMaxAngle - config[Level1][Level2].angle));
+                    config[Level1][Level2].rotDir = !config[Level1][Level2].rotDir;
+                } else {
+                    config[Level1][Level2].angle += rotAngle;
+                }
             } else {
-                config[Level1][Level2].angle += rotAngle;
+                if (config[Level1][Level2].angle - rotAngle < config[Level1][Level2].rotMinAngle) {
+                    config[Level1][Level2].angle = config[Level1][Level2].rotMinAngle + (rotAngle - (config[Level1][Level2].angle - (config[Level1][Level2].rotMinAngle)));
+                    config[Level1][Level2].rotDir = !config[Level1][Level2].rotDir;
+                } else {
+                    config[Level1][Level2].angle -= rotAngle;
+                }
             }
-        } else {
-            if (config[Level1][Level2].angle - rotAngle < config[Level1][Level2].rotMinAngle) {
-                config[Level1][Level2].angle = config[Level1][Level2].rotMinAngle + (rotAngle - (config[Level1][Level2].angle - (config[Level1][Level2].rotMinAngle)));
-                config[Level1][Level2].rotDir = !config[Level1][Level2].rotDir;
-            } else {
-                config[Level1][Level2].angle -= rotAngle;
-            }
+        }
+    } else {
+        if (!config.Env.Pause && !config[Level1].Pause && !config[Level1][Level2].Pause) {
+            config[Level1][Level2].angle += (config[Level1][Level2].rotSpeed * interval) / 1000.0;
+            config[Level1][Level2].angle %= config[Level1][Level2].rotMaxAngle - config[Level1][Level2].rotMinAngle;
         }
     }
 }
