@@ -3,7 +3,7 @@ function defEnderDragonBody() {
 }
 
 function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
-    if (!config.Env.Pause && !dragMode && mousePos[0] && mousePos[1] && (Math.abs(mousePos[0] - EnderDragonPos[0]) > 0.01 || Math.abs(mousePos[1] - EnderDragonPos[1]) > 0.01)) {
+    if (!config.Env.Pause && !config.EnderDragon.Pause && mousePos[0] && mousePos[1] && (Math.abs(mousePos[0] - EnderDragonPos[0]) > 0.01 || Math.abs(mousePos[1] - EnderDragonPos[1]) > 0.01)) {
         let dx, dy, distance;
         dx = mousePos[0] - EnderDragonPos[0];
         dy = mousePos[1] - EnderDragonPos[1];
@@ -14,13 +14,14 @@ function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
             console.debug('Lock');
             EnderDragonPos[0] = mousePos[0];
             EnderDragonPos[1] = mousePos[1];
+            hasTarget = false;
         } else {
             console.debug('Unlock');
             EnderDragonPos[0] += (interval / 100000) * dx * config.EnderDragon.Body.trackSpeed;
             EnderDragonPos[1] += (interval / 100000) * dy * config.EnderDragon.Body.trackSpeed;
         }
-    } else if (!dragMode && !mousePos[0] && !mousePos[1]) {
-        // console.log(111)
+    } else {
+        hasTarget = false;
     }
 
     modelMatrix.setTranslate(EnderDragonPos[0], EnderDragonPos[1], EnderDragonPos[2]);
@@ -40,70 +41,157 @@ function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
     gl.drawArrays(gl.TRIANGLE_STRIP, Info.EnderDragon.Body.position, Info.EnderDragon.Body.n);
 }
 
+function defEnderDragonNeck() {
+    defConvex(W = config.EnderDragon.Neck.W, H = config.EnderDragon.Neck.H, L = config.EnderDragon.Neck.L, w = config.EnderDragon.Neck.w, h = config.EnderDragon.Neck.h, l = config.EnderDragon.Neck.l, Offest = config.EnderDragon.Neck.L, Level1 = 'EnderDragon', Level2 = 'Neck');
+}
+
+function drawEnderDragonNeck(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx) {
+    switch (idx) {
+        case 1:
+            modelMatrix.translate(0, 0, config.EnderDragon.Body.L - 0.03);
+            break;
+        default:
+            modelMatrix.translate(0, 0, 0.18);
+    }
+    modelMatrix.scale(config.EnderDragon.Neck.Size, config.EnderDragon.Neck.Size, config.EnderDragon.Neck.Size);
+
+    // Rotate
+    rotate(interval, 'EnderDragon', 'Neck', reciprocate = true);
+
+    modelMatrix.rotate(config.EnderDragon.Neck.angle, 1, 0, 0);
+
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+
+    colorMatrix.setTranslate(config.EnderDragon.Neck.Clr[0] / 255, config.EnderDragon.Neck.Clr[1] / 255, config.EnderDragon.Neck.Clr[2] / 255);
+    gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
+
+    gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Neck.position, Info.EnderDragon.Neck.n);
+}
+
 function defEnderDragonTail() {
+    defConvex(W = config.EnderDragon.Tail.W, H = config.EnderDragon.Tail.H, L = config.EnderDragon.Tail.L, w = config.EnderDragon.Tail.w, h = config.EnderDragon.Tail.h, l = config.EnderDragon.Tail.l, Offest = -config.EnderDragon.Tail.L, Level1 = 'EnderDragon', Level2 = 'Tail');
+}
+
+function defConvex(W, H, L, w, h, l, Offset, Level1, Level2) {
     let EnderDragonTail_Vertices = new Float32Array([
         // front
-        -0.05, -0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        0.05, -0.05, 0, 1.0, 0.0, 1.0, 1.0,
-        -0.05, 0.05, 0, 1.0, 1.0, 0.0, 1.0,
+        -W, -H, L + Offset, 1.0, 1.0, 1.0, 0.0,
+        W, -H, L + Offset, 1.0, 0.0, 1.0, 1.0,
+        -W, H, L + Offset, 1.0, 1.0, 0.0, 1.0,
 
-        0.05, -0.05, 0, 1.0, 0.0, 1.0, 1.0,
-        -0.05, 0.05, 0, 1.0, 1.0, 0.0, 1.0,
-        0.05, 0.05, 0, 1.0, 1.0, 1.0, 0.0,
+        W, -H, L + Offset, 1.0, 0.0, 1.0, 1.0,
+        -W, H, L + Offset, 1.0, 1.0, 0.0, 1.0,
+        W, H, L + Offset, 1.0, 1.0, 1.0, 0.0,
 
         // right
-        0.05, -0.05, 0, 1.0, 0.0, 1.0, 1.0,
-        0.05, 0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        0.05, -0.05, -0.2, 1.0, 0.0, 1.0, 1.0,
+        W, -H, L + Offset, 1.0, 0.0, 1.0, 1.0,
+        W, H, L + Offset, 1.0, 1.0, 1.0, 0.0,
+        W, -H, -L + Offset, 1.0, 0.0, 1.0, 1.0,
 
-        0.05, 0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        0.05, -0.05, -0.2, 1.0, 0.0, 1.0, 1.0,
-        0.05, 0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
+        W, H, L + Offset, 1.0, 1.0, 1.0, 0.0,
+        W, -H, -L + Offset, 1.0, 0.0, 1.0, 1.0,
+        W, H, -L + Offset, 1.0, 1.0, 1.0, 0.0,
 
         // left
-        -0.05, -0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        -0.05, 0.05, 0, 1.0, 1.0, 0.0, 1.0,
-        -0.05, -0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
+        -W, -H, L + Offset, 1.0, 1.0, 1.0, 0.0,
+        -W, H, L + Offset, 1.0, 1.0, 0.0, 1.0,
+        -W, -H, -L + Offset, 1.0, 1.0, 1.0, 0.0,
 
-        -0.05, 0.05, 0, 1.0, 1.0, 0.0, 1.0,
-        -0.05, -0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
-        -0.05, 0.05, -0.2, 1.0, 1.0, 0.0, 1.0,
+        -W, H, L + Offset, 1.0, 1.0, 0.0, 1.0,
+        -W, -H, -L + Offset, 1.0, 1.0, 1.0, 0.0,
+        -W, H, -L + Offset, 1.0, 1.0, 0.0, 1.0,
 
         // up
-        -0.05, 0.05, 0, 1.0, 1.0, 0.0, 1.0,
-        0.05, 0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        -0.05, 0.05, -0.2, 1.0, 1.0, 0.0, 1.0,
+        -W, H, L + Offset, 1.0, 1.0, 0.0, 1.0,
+        W, H, L + Offset, 1.0, 1.0, 1.0, 0.0,
+        -W, H, -L + Offset, 1.0, 1.0, 0.0, 1.0,
 
-        0.05, 0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        -0.05, 0.05, -0.2, 1.0, 1.0, 0.0, 1.0,
-        0.05, 0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
+        W, H, L + Offset, 1.0, 1.0, 1.0, 0.0,
+        -W, H, -L + Offset, 1.0, 1.0, 0.0, 1.0,
+        W, H, -L + Offset, 1.0, 1.0, 1.0, 0.0,
 
         // down
-        -0.05, -0.05, 0, 1.0, 1.0, 1.0, 0.0,
-        0.05, -0.05, 0, 1.0, 0.0, 1.0, 1.0,
-        -0.05, -0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
+        -W, -H, L + Offset, 1.0, 1.0, 1.0, 0.0,
+        W, -H, L + Offset, 1.0, 0.0, 1.0, 1.0,
+        -W, -H, -L + Offset, 1.0, 1.0, 1.0, 0.0,
 
-        0.05, -0.05, 0, 1.0, 0.0, 1.0, 1.0,
-        -0.05, -0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
-        0.05, -0.05, -0.2, 1.0, 0.0, 1.0, 1.0,
+        W, -H, L + Offset, 1.0, 0.0, 1.0, 1.0,
+        -W, -H, -L + Offset, 1.0, 1.0, 1.0, 0.0,
+        W, -H, -L + Offset, 1.0, 0.0, 1.0, 1.0,
 
         // rear
-        -0.05, -0.05, -0.2, 1.0, 1.0, 1.0, 0.0,
-        0.05, -0.05, -0.2, 1.0, 0.0, 1.0, 1.0,
-        -0.05, 0.05, -0.2, 1.0, 1.0, 0.0, 1.0,
+        -W, -H, -L + Offset, 1.0, 1.0, 1.0, 0.0,
+        W, -H, -L + Offset, 1.0, 0.0, 1.0, 1.0,
+        -W, H, -L + Offset, 1.0, 1.0, 0.0, 1.0,
 
-        0.05, -0.05, -0.2, 1.0, 0.0, 1.0, 1.0,
-        -0.05, 0.05, -0.2, 1.0, 1.0, 0.0, 1.0,
-        0.05, 0.05, -0.2, 1.0, 1.0, 1.0, 0.0
+        W, -H, -L + Offset, 1.0, 0.0, 1.0, 1.0,
+        -W, H, -L + Offset, 1.0, 1.0, 0.0, 1.0,
+        W, H, -L + Offset, 1.0, 1.0, 1.0, 0.0,
+
+        // Fin
+        // front
+        - w, 0.05, Offset + l, 1.0, 1.0, 1.0, 0.0,
+        w, 0.05, Offset + l, 1.0, 0.0, 1.0, 1.0,
+        -w, 0.05 + h, Offset + l, 1.0, 1.0, 0.0, 1.0,
+
+        w, 0.05, Offset + l, 1.0, 0.0, 1.0, 1.0,
+        -w, 0.05 + h, Offset + l, 1.0, 1.0, 0.0, 1.0,
+        w, 0.05 + h, Offset + l, 1.0, 1.0, 1.0, 0.0,
+
+        // right
+        w, 0.05, Offset + l, 1.0, 0.0, 1.0, 1.0,
+        w, 0.05 + h, Offset + l, 1.0, 1.0, 1.0, 0.0,
+        w, 0.05, Offset - l, 1.0, 0.0, 1.0, 1.0,
+
+        w, 0.05 + h, Offset + l, 1.0, 1.0, 1.0, 0.0,
+        w, 0.05, Offset - l, 1.0, 0.0, 1.0, 1.0,
+        w, 0.05 + h, Offset - l, 1.0, 1.0, 1.0, 0.0,
+
+        // left
+        -w, 0.05, Offset + l, 1.0, 1.0, 1.0, 0.0,
+        -w, 0.05 + h, Offset + l, 1.0, 1.0, 0.0, 1.0,
+        -w, 0.05, Offset - l, 1.0, 1.0, 1.0, 0.0,
+
+        -w, 0.05 + h, Offset + l, 1.0, 1.0, 0.0, 1.0,
+        -w, 0.05, Offset - l, 1.0, 1.0, 1.0, 0.0,
+        -w, 0.05 + h, Offset - l, 1.0, 1.0, 0.0, 1.0,
+
+        // up
+        -w, 0.05 + h, Offset + l, 1.0, 1.0, 0.0, 1.0,
+        w, 0.05 + h, Offset + l, 1.0, 1.0, 1.0, 0.0,
+        -w, 0.05 + h, Offset - l, 1.0, 1.0, 0.0, 1.0,
+
+        w, 0.05 + h, Offset + l, 1.0, 1.0, 1.0, 0.0,
+        -w, 0.05 + h, Offset - l, 1.0, 1.0, 0.0, 1.0,
+        w, 0.05 + h, Offset - l, 1.0, 1.0, 1.0, 0.0,
+
+        // // down
+        // -w, 0.05,Offset+l, 1.0, 1.0, 1.0, 0.0,
+        // w, 0.05,Offset+l, 1.0, 0.0, 1.0, 1.0,
+        // -w, 0.05, Offset-l, 1.0, 1.0, 1.0, 0.0,
+
+        // w, 0.05,Offset+l, 1.0, 0.0, 1.0, 1.0,
+        // -w, 0.05, Offset-l, 1.0, 1.0, 1.0, 0.0,
+        // w, 0.05, Offset-l, 1.0, 0.0, 1.0, 1.0,
+
+        // rear
+        -w, 0.05, Offset - l, 1.0, 1.0, 1.0, 0.0,
+        w, 0.05, Offset - l, 1.0, 0.0, 1.0, 1.0,
+        -w, 0.05 + h, Offset - l, 1.0, 1.0, 0.0, 1.0,
+
+        w, 0.05, Offset - l, 1.0, 0.0, 1.0, 1.0,
+        -w, 0.05 + h, Offset - l, 1.0, 1.0, 0.0, 1.0,
+        w, 0.05 + h, Offset - l, 1.0, 1.0, 1.0, 0.0
+
     ])
 
-    updateInfo('EnderDragon', 'Tail', EnderDragonTail_Vertices);
+    updateInfo(Level1, Level2, EnderDragonTail_Vertices);
 }
 
 function drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx) {
     switch (idx) {
         case 1:
-            modelMatrix.translate(0, 0, -0.22);
+            modelMatrix.translate(0, 0, -config.EnderDragon.Body.L + 0.03);
             break;
         default:
             modelMatrix.translate(0, 0, -0.18);
@@ -202,9 +290,9 @@ function defEnderDragonWing1() {
         0.4, 0.0375, -0.05, 1.0, 1.0, -0.0, 0.0,
         0.4, -0.025, -0.4, 1.0, 1.0, -0.0, 0.0,
         0.4, 0.025, -0.4, 1.0, 1.0, -0.0, 0.0,
-        0.4, -0.025, -0.4, 1.0, 1.0, 0.0, -0.0,
-        0.4, 0.0375, -0.05, 1.0, 1.0, 0.0, -0.0,
-        0.4, -0.0375, -0.05, 1.0, 1.0, 0.0, -0.0
+        0.4, -0.025, -0.4, 1.0, 0.1, 0.7, 0.1,
+        0.4, 0.0375, -0.05, 1.0, 1.0, 0.2, 0.4,
+        0.4, -0.0375, -0.05, 1.0, 0.0, 0.5, 0.9
     ])
 
     updateInfo('EnderDragon', 'Wing1', EnderDragonWing1_Vertices);
@@ -214,9 +302,11 @@ function drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, colorMatrix,
     switch (idx) {
         case 1:
             modelMatrix.translate(0.1, 0, 0.15);
+            modelMatrix.scale(config.EnderDragon.Wing1.Size, config.EnderDragon.Wing1.Size, config.EnderDragon.Wing1.Size);
             break;
         case 2:
             modelMatrix.translate(-0.1, 0, 0.15);
+            modelMatrix.scale(config.EnderDragon.Wing1.Size, config.EnderDragon.Wing1.Size, config.EnderDragon.Wing1.Size);
             modelMatrix.scale(-1, 1, 1);
             break;
     }
@@ -371,4 +461,109 @@ function defCylinderY(L, R, capVerts, Level1, Level2) {
         Vertices[j + 6] = Math.random();
     }
     updateInfo(Level1, Level2, Vertices);
+}
+
+function defCuboid(w, OffsetX, h, OffsetY, l, OffsetZ, Level1, Level2) {
+    let Fin_Vertices = new Float32Array([
+        // front
+        -w + OffsetX, -h + OffsetY, l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+        w + OffsetX, -h + OffsetY, l + OffsetZ, 1.0, 0.0, 1.0, 1.0,
+        -w + OffsetX, h + OffsetY, l + OffsetZ, 1.0, 1.0, 0.0, 1.0,
+
+        w + OffsetX, -h + OffsetY, l + OffsetZ, 1.0, 0.0, 1.0, 1.0,
+        -w + OffsetX, h + OffsetY, l + OffsetZ, 1.0, 1.0, 0.0, 1.0,
+        w + OffsetX, h + OffsetY, l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+
+        // right
+        w + OffsetX, -h + OffsetY, l + OffsetZ, 1.0, 0.0, 1.0, 1.0,
+        w + OffsetX, h + OffsetY, l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+        w + OffsetX, -h + OffsetY, -l + OffsetZ, 1.0, 0.0, 1.0, 1.0,
+
+        w + OffsetX, h + OffsetY, l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+        w + OffsetX, -h + OffsetY, -l + OffsetZ, 1.0, 0.0, 1.0, 1.0,
+        w + OffsetX, h + OffsetY, -l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+
+        // left
+        -w + OffsetX, -h + OffsetY, l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+        -w + OffsetX, h + OffsetY, l + OffsetZ, 1.0, 1.0, 0.0, 1.0,
+        -w + OffsetX, -h + OffsetY, -l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+
+        -w + OffsetX, h + OffsetY, l + OffsetZ, 1.0, 1.0, 0.0, 1.0,
+        -w + OffsetX, -h + OffsetY, -l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+        -w + OffsetX, h + OffsetY, -l + OffsetZ, 1.0, 1.0, 0.0, 1.0,
+
+        // up
+        -w + OffsetX, h + OffsetY, l + OffsetZ, 1.0, 1.0, 0.0, 1.0,
+        w + OffsetX, h + OffsetY, l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+        -w + OffsetX, h + OffsetY, -l + OffsetZ, 1.0, 1.0, 0.0, 1.0,
+
+        w + OffsetX, h + OffsetY, l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+        -w + OffsetX, h + OffsetY, -l + OffsetZ, 1.0, 1.0, 0.0, 1.0,
+        w + OffsetX, h + OffsetY, -l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+
+        // down
+        -w + OffsetX, -h + OffsetY, l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+        w + OffsetX, -h + OffsetY, l + OffsetZ, 1.0, 0.0, 1.0, 1.0,
+        -w + OffsetX, -h + OffsetY, -l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+
+        w + OffsetX, -h + OffsetY, l + OffsetZ, 1.0, 0.0, 1.0, 1.0,
+        -w + OffsetX, -h + OffsetY, -l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+        w + OffsetX, -h + OffsetY, -l + OffsetZ, 1.0, 0.0, 1.0, 1.0,
+
+        // rear
+        -w + OffsetX, -h + OffsetY, -l + OffsetZ, 1.0, 1.0, 1.0, 0.0,
+        w + OffsetX, -h + OffsetY, -l + OffsetZ, 1.0, 0.0, 1.0, 1.0,
+        -w + OffsetX, h + OffsetY, -l + OffsetZ, 1.0, 1.0, 0.0, 1.0,
+
+        w + OffsetX, -h + OffsetY, -l + OffsetZ, 1.0, 0.0, 1.0, 1.0,
+        -w + OffsetX, h + OffsetY, -l + OffsetZ, 1.0, 1.0, 0.0, 1.0,
+        w + OffsetX, h + OffsetY, -l + OffsetZ, 1.0, 1.0, 1.0, 0.0
+    ])
+
+    updateInfo(Level1, Level2, Fin_Vertices);
+}
+
+function drawEnderDragonFin(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+
+    // colorMatrix.setTranslate(config.EnderDragon.Fin.Clr[0] / 255, config.EnderDragon.Fin.Clr[1] / 255, config.EnderDragon.Fin.Clr[2] / 255);
+    // gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
+
+    gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Fin.position, Info.EnderDragon.Fin.n);
+
+    modelMatrix.translate(0, 0, config.EnderDragon.Body.L / 2);
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Fin.position, Info.EnderDragon.Fin.n);
+
+    modelMatrix.translate(0, 0, -config.EnderDragon.Body.L);
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Fin.position, Info.EnderDragon.Fin.n);
+}
+
+function drawEnderDragonHead(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
+    // pushMatrix(modelMatrix);
+    modelMatrix.translate(0, 0, config.EnderDragon.Neck.L * 2)
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Head.position, Info.EnderDragon.Head.n);
+
+    colorMatrix.setTranslate(config.EnderDragon.Head.Clr[0] / 255, config.EnderDragon.Head.Clr[1] / 255, config.EnderDragon.Head.Clr[2] / 255);
+    gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
+
+    // modelMatrix = popMatrix();
+
+    // pushMatrix(modelMatrix);
+    // modelMatrix.scale(0.8, 0.25, 1.5);
+    // modelMatrix.rotate(-10, 1, 0, 0);
+    // modelMatrix.translate(0, -0.3, 0.12 * 2);
+    // gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    // gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Head.position, Info.EnderDragon.Head.n);
+    // modelMatrix = popMatrix();
+
+    // pushMatrix(modelMatrix);
+    // modelMatrix.scale(0.8, 0.25, 1.5);
+    // modelMatrix.rotate(10, 1, 0, 0);
+    // modelMatrix.translate(0, -0.2, 0.12 * 2);
+    // gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    // gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Head.position, Info.EnderDragon.Head.n);
+    // modelMatrix = popMatrix();
 }

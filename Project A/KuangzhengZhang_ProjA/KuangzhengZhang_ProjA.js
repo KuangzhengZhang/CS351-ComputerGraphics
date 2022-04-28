@@ -9,7 +9,7 @@ let Config = function () {
 
     this.EnderDragon = {
         Pause: false,
-        Size: 1,
+        Size: 0.5,
         Body: {
             Pause: false,
             Clr: [78, 42, 132, 1],
@@ -19,22 +19,59 @@ let Config = function () {
             rotMaxAngle: 180,
             rotMinAngle: -180,
 
-            L: 0.25,
+            L: 0.4,
             R: 0.1,
-            H: 0.25,
+            H: 0.4,
             capVerts: 10,
 
             angle: 0,
             rotDir: true
         },
+        Neck: {
+            Pause: false,
+            Clr: [165, 255, 1, 1],
+            Size: 1,
+            Num: 3,
+            rotSpeed: 1,
+            rotMaxAngle: 5,
+            rotMinAngle: -5,
+
+            W: 0.05,
+            H: 0.05,
+            L: 0.1,
+            w: 0.02,
+            h: 0.05,
+            l: 0.05,
+            // Offset: -0.1,
+
+            angle: 0,
+            rotDir: true
+        },
+        Head: {
+            Pause: false,
+            Clr: [0, 0, 0, 1],
+            Size: 1,
+            // Num: 3,
+            // rotSpeed: 1,
+            // rotMaxAngle: 5,
+            // rotMinAngle: -5
+        },
         Tail: {
             Pause: false,
-            Clr: [78, 42, 132, 1],
-            Size: 0.9,
+            Clr: [0, 0, 0, 1],
+            Size: 1,
             Num: 5,
-            rotSpeed: 10,
-            rotMaxAngle: 15,
-            rotMinAngle: -15,
+            rotSpeed: 1,
+            rotMaxAngle: 5,
+            rotMinAngle: -5,
+
+            W: 0.05,
+            H: 0.05,
+            L: 0.1,
+            w: 0.02,
+            h: 0.05,
+            l: 0.05,
+            // Offset: -0.1,
 
             angle: 0,
             rotDir: true
@@ -65,19 +102,20 @@ let Config = function () {
 
     this.Clover = {
         Pause: false,
-        Size: 1,
+        Size: 0.8,
         Stem: {
             Pause: false,
             Clr: [78, 42, 132, 1],
             Size: 1,
             Num: 4,
-            rotSpeed: 10,
+            rotSpeed: 15,
             rotMaxAngle: 10,
             rotMinAngle: -10,
 
             L: 0.15,
             R: 0.02,
             capVerts: 8,
+            Xangle: 0,
 
             angle: 0,
             rotDir: true
@@ -105,7 +143,7 @@ let Config = function () {
             Size: 1,
             Num: 3,
             trackSpeed: 60,
-            rotSpeed: 45,
+            rotSpeed: 90,
             angle: 0,
             rotDir: true,
             rotMaxAngle: 180,
@@ -127,7 +165,9 @@ let colorMatrix = new Matrix4();
 
 // Position
 let mousePos = [null, null];
+let premousePos = [null, null];
 let EnderDragonPos = [0, 0, 0];
+let CloverPos = [0, -1, 0];
 
 // Animation
 let g_last = Date.now();
@@ -135,9 +175,30 @@ let g_last = Date.now();
 // Mouse
 let dragMode = false;
 
+// random
+let hasTarget = false;
+
+let vertices;
+let n;
+
 let Info = {
     EnderDragon: {
         Body: {
+            vertices: null,
+            n: null,
+            position: null
+        },
+        Fin: {
+            vertices: null,
+            n: null,
+            position: null
+        },
+        Neck: {
+            vertices: null,
+            n: null,
+            position: null
+        },
+        Head: {
             vertices: null,
             n: null,
             position: null
@@ -179,8 +240,6 @@ let Info = {
     },
     n: 0
 };
-let vertices;
-let n;
 
 
 // register mouse event
@@ -228,7 +287,7 @@ function initCfg() {
     // EnderDragon
     let EnderDragon = gui.addFolder('EnderDragon');
     EnderDragon.add(config.EnderDragon, 'Pause').listen();
-    EnderDragon.add(config.EnderDragon, 'Size', 0, 2).listen();
+    EnderDragon.add(config.EnderDragon, 'Size', 0, 1).listen();
 
     // EnderDragonBody
     let EnderDragonBody = EnderDragon.addFolder('Body');
@@ -244,20 +303,35 @@ function initCfg() {
     // });
     // EnderDragonBody.add(config.EnderDragon.Body, 'rotMaxAngle', config.EnderDragon.Body.rotMinAngle, 90).listen();
 
+    // EnderDragonNeck
+    let EnderDragonNeck = EnderDragon.addFolder('Neck');
+    EnderDragonNeck.add(config.EnderDragon.Neck, 'Pause').listen();
+    EnderDragonNeck.addColor(config.EnderDragon.Neck, 'Clr').listen();
+    EnderDragonNeck.add(config.EnderDragon.Neck, 'Num', 1, 5, 1).listen();
+    // EnderDragonNeck.add(config.EnderDragon.Neck, 'Size', 0, 2).listen();
+    EnderDragonNeck.add(config.EnderDragon.Neck, 'rotSpeed', 0, 50).listen();
+    EnderDragonNeck.add(config.EnderDragon.Neck, 'rotMinAngle', -30, 30).listen().onChange(() => {
+        gui.__folders.EnderDragon.__folders.Neck.__controllers[5].__min = config.EnderDragon.Neck.rotMinAngle + 1;
+        if (config.EnderDragon.Neck.rotMaxAngle <= config.EnderDragon.Neck.rotMinAngle) {
+            config.EnderDragon.Neck.rotMaxAngle = config.EnderDragon.Neck.rotMinAngle + 1;
+        }
+    });
+    EnderDragonNeck.add(config.EnderDragon.Neck, 'rotMaxAngle', config.EnderDragon.Neck.rotMinAngle, 30).listen();
+
     // EnderDragonTail
     let EnderDragonTail = EnderDragon.addFolder('Tail');
     EnderDragonTail.add(config.EnderDragon.Tail, 'Pause').listen();
     EnderDragonTail.addColor(config.EnderDragon.Tail, 'Clr').listen();
     EnderDragonTail.add(config.EnderDragon.Tail, 'Num', 1, 5, 1).listen();
-    EnderDragonTail.add(config.EnderDragon.Tail, 'Size', 0, 2).listen();
+    // EnderDragonTail.add(config.EnderDragon.Tail, 'Size', 0, 2).listen();
     EnderDragonTail.add(config.EnderDragon.Tail, 'rotSpeed', 0, 50).listen();
-    EnderDragonTail.add(config.EnderDragon.Tail, 'rotMinAngle', -90, 90).listen().onChange(() => {
-        gui.__folders.EnderDragon.__folders.Tail.__controllers[6].__min = config.EnderDragon.Tail.rotMinAngle + 1;
+    EnderDragonTail.add(config.EnderDragon.Tail, 'rotMinAngle', -30, 30).listen().onChange(() => {
+        gui.__folders.EnderDragon.__folders.Tail.__controllers[5].__min = config.EnderDragon.Tail.rotMinAngle + 1;
         if (config.EnderDragon.Tail.rotMaxAngle <= config.EnderDragon.Tail.rotMinAngle) {
             config.EnderDragon.Tail.rotMaxAngle = config.EnderDragon.Tail.rotMinAngle + 1;
         }
     });
-    EnderDragonTail.add(config.EnderDragon.Tail, 'rotMaxAngle', config.EnderDragon.Tail.rotMinAngle, 90).listen();
+    EnderDragonTail.add(config.EnderDragon.Tail, 'rotMaxAngle', config.EnderDragon.Tail.rotMinAngle, 30).listen();
 
     // EnderDragonWing1
     let EnderDragonWing1 = EnderDragon.addFolder('Wing1');
@@ -266,7 +340,7 @@ function initCfg() {
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'Size', 0, 2).listen();
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotSpeed', 0, 50).listen();
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotMinAngle', -90, 90).listen().onChange(() => {
-        gui.__folders.EnderDragon.__folders.Wing1.__controllers[4].__min = config.EnderDragon.Wing1.rotMinAngle + 1;
+        gui.__folders.EnderDragon.__folders.Wing1.__controllers[5].__min = config.EnderDragon.Wing1.rotMinAngle + 1;
         if (config.EnderDragon.Wing1.rotMaxAngle <= config.EnderDragon.Wing1.rotMinAngle) {
             config.EnderDragon.Wing1.rotMaxAngle = config.EnderDragon.Wing1.rotMinAngle + 1;
         }
@@ -283,9 +357,9 @@ function initCfg() {
     let CloverStem = Clover.addFolder('Stem');
     CloverStem.add(config.Clover.Stem, 'Pause').listen();
     CloverStem.addColor(config.Clover.Stem, 'Clr').listen();
-    CloverStem.add(config.Clover.Stem, 'Size', 0, 2).listen();
+    // CloverStem.add(config.Clover.Stem, 'Size', 0, 2).listen();
     CloverStem.add(config.Clover.Stem, 'Num', 1, 10, 1).listen();
-    CloverStem.add(config.Clover.Stem, 'rotSpeed', 0, 180).listen();
+    CloverStem.add(config.Clover.Stem, 'rotSpeed', 0, 30).listen();
     // CloverStem.add(config.Clover.Stem, 'L', 0.1, 0.3).listen();
     // CloverStem.add(config.Clover.Stem, 'R', 0.01, 0.1).listen();
     // CloverStem.add(config.Clover.Stem, 'capVerts', 3, 10).listen();
@@ -306,13 +380,6 @@ function initCfg() {
     Clover.open();
 }
 
-function initMenu() {
-    let menu = new dat.GUI({ name: 'MENU' });
-    menu.add(config.Env, 'Width').listen();
-    // let Env = menu.addFolder('Env');
-    // a = Env.addColor(config.Env, 'bgClr').listen();
-}
-
 function getMousePos(event) {
     if (canvas) {
         let rect = canvas.getBoundingClientRect();
@@ -329,6 +396,9 @@ function getMousePos(event) {
 }
 
 function isMouseInCanvas() {
+    if (!event) {
+        return false;
+    }
     let pos = getMousePos(event);
     let x = pos.x;
     let y = pos.y;
@@ -336,7 +406,9 @@ function isMouseInCanvas() {
 }
 
 function mouseDown(event) {
-    if (isMouseInCanvas()) { dragMode = true };
+    if (isMouseInCanvas()) {
+        dragMode = true;
+    };
     console.debug(`MouseDownEvent: Position = (${event.offsetX}, ${event.offsetY})`);
 }
 
@@ -351,17 +423,28 @@ function mouseMove(event) {
     let y = pos.y;
 
     // Update mousePos
-    console.log(dragMode)
     if (dragMode) {
-        EnderDragonPos[0] = x;
-        EnderDragonPos[1] = y;
-    } else {
+        // EnderDragonPos[0] = x;
+        // EnderDragonPos[1] = y;
+
         if (isMouseInCanvas()) {
+            if (x > mousePos[0]) {
+                config.Clover.Stem.Xangle += 5;
+                config.Clover.Stem.Xangle %= 360;
+            } else {
+                config.Clover.Stem.Xangle -= 5;
+                config.Clover.Stem.Xangle %= 360;
+            }
             mousePos[0] = x;
             mousePos[1] = y;
         } else {
             mousePos[0] = null;
             mousePos[1] = null;
+        }
+    } else {
+        if (isMouseInCanvas()) {
+            mousePos[0] = x;
+            mousePos[1] = y;
         }
     }
     document.getElementById('mousePos').innerHTML = `Mouse Position: (${x}, ${y})`;
@@ -376,22 +459,34 @@ function keyDown(event) {
     switch (event.code) {
         case 'KeyW':
         case 'ArrowUp':
-            EnderDragonPos[1] += 0.01;
+            event.preventDefault();
+            CloverPos[1] += 0.01;
             break;
         case 'KeyS':
         case 'ArrowDown':
-            EnderDragonPos[1] -= 0.01;
+            event.preventDefault();
+            CloverPos[1] -= 0.01;
             break;
         case 'KeyA':
         case 'ArrowLeft':
-            EnderDragonPos[0] -= 0.01;
+            event.preventDefault();
+            CloverPos[0] -= 0.01;
             break;
         case 'KeyD':
         case 'ArrowRight':
-            EnderDragonPos[0] += 0.01;
+            event.preventDefault();
+            CloverPos[0] += 0.01;
             break;
         case 'Space':
+            event.preventDefault();
             config.Env.Pause = !config.Env.Pause;
+            break;
+        case 'KeyR':
+            gui.revert();
+            break;
+        case 'Slash':
+            gui.__closeButton.click();
+            break;
     }
 }
 
@@ -404,6 +499,9 @@ function keyUp(event) {
 
 function initVertexBuffer() {
     defEnderDragonBody();
+    defCuboid(w = 0.02, OffsetX = 0, h = 0.05, OffsetY = 0.1, l = 0.05, OffsetZ = 0, Level1 = 'EnderDragon', Level2 = 'Fin');
+    defEnderDragonNeck();
+    defCuboid(w = 0.1, OffsetX = 0, h = 0.1, OffsetY = 0, l = 0.12, OffsetZ = 0.12, Level1 = 'EnderDragon', Level2 = 'Head');
     defEnderDragonTail();
     defEnderDragonWing1();
 
@@ -466,6 +564,12 @@ function initVertexBuffer() {
 }
 
 function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
+    if (!config.Env.Pause && !hasTarget && !dragMode) {
+        console.debug(`Update Target!`);
+        mousePos[0] = (2 * Math.random() - 1);
+        mousePos[1] = (2 * Math.random() - 1);
+        hasTarget = true;
+    }
     modelMatrix.setIdentity();
     colorMatrix.setIdentity();
 
@@ -476,6 +580,21 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     // EnderDragon
     // Body
     drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+
+    // Fin
+    pushMatrix(modelMatrix);
+    drawEnderDragonFin(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+    modelMatrix = popMatrix();
+
+    // Neck + Head
+    pushMatrix(modelMatrix);
+    pushMatrix(colorMatrix);
+    for (let i = 1; i <= config.EnderDragon.Neck.Num; i++) {
+        drawEnderDragonNeck(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
+    }
+    colorMatrix = popMatrix();
+    drawEnderDragonHead(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix)
+    modelMatrix = popMatrix();
 
     // Tail
     pushMatrix(modelMatrix);
@@ -622,7 +741,6 @@ function initArrayBuffer(gl, attribute, data, type, num) {
 
 async function main() {
     initCfg();
-    initMenu();
 
     // Retrieve <canvas> element
     canvas = document.getElementById('webgl');
@@ -663,7 +781,7 @@ async function main() {
     gl.clearDepth(0.0);
     gl.depthFunc(gl.GREATER);
 
-    let tick = function () {
+    let tick = () => {
         let now = Date.now();
         let interval = now - g_last;
         g_last = now;
