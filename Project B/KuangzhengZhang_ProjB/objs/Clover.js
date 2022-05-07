@@ -20,8 +20,8 @@ function drawCloverStem(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_Col
 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-    colorMatrix.setTranslate(config.Clover.Stem.Clr[0] / 255, config.Clover.Stem.Clr[1] / 255, config.Clover.Stem.Clr[2] / 255);
-    gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
+    // colorMatrix.setTranslate(config.Clover.Stem.Clr[0] / 255, config.Clover.Stem.Clr[1] / 255, config.Clover.Stem.Clr[2] / 255);
+    // gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, Info.Clover.Stem.position, Info.Clover.Stem.n);
 }
@@ -40,8 +40,8 @@ function drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_C
 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-    colorMatrix.setTranslate(config.Clover.Stamen.Clr[0] / 255, config.Clover.Stamen.Clr[1] / 255, config.Clover.Stamen.Clr[2] / 255);
-    gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
+    // colorMatrix.setTranslate(config.Clover.Stamen.Clr[0] / 255, config.Clover.Stamen.Clr[1] / 255, config.Clover.Stamen.Clr[2] / 255);
+    // gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, Info.Clover.Stamen.position, Info.Clover.Stamen.n);
 }
@@ -116,8 +116,8 @@ function drawCloverPetal(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_Co
 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-    colorMatrix.setTranslate(config.Clover.Petal.Clr[0] / 255, config.Clover.Petal.Clr[1] / 255, config.Clover.Petal.Clr[2] / 255);
-    gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
+    // colorMatrix.setTranslate(config.Clover.Petal.Clr[0] / 255, config.Clover.Petal.Clr[1] / 255, config.Clover.Petal.Clr[2] / 255);
+    // gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
     gl.drawArrays(gl.TRIANGLES, Info.Clover.Petal.position, Info.Clover.Petal.n);
 }

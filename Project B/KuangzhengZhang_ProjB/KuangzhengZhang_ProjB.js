@@ -3,7 +3,7 @@ let Config = function () {
         Pause: true,
         bgClr: [0, 229, 238, 1],
 
-        Width: 650,
+        Width: 1300,
         Height: 650
     }
 
@@ -152,16 +152,19 @@ let Config = function () {
     }
 };
 
+// Camera
+var g_EyeX = 0.20, g_EyeY = 0.25, g_EyeZ = 4.25;
+
 // const
-const floatsPerVertex = 7;
+let floatsPerVertex = 7;
 
 let gl;
 let canvas;
 let config = new Config();
 let gui;
 
-let modelMatrix = new Matrix4();
-let colorMatrix = new Matrix4();
+let viewMatrix = new Matrix4();
+let projMatrix = new Matrix4();
 
 // Position
 let mousePos = [null, null];
@@ -188,6 +191,7 @@ let Info = {
             n: null,
             position: null
         },
+        n: null
     },
     EnderDragon: {
         Body: {
@@ -259,13 +263,14 @@ document.onkeydown = keyDown;
 document.onkeyup = keyUp;
 // document.onkeypress = keyPress;
 
+/*
 var VSHADER_SOURCE =
     'attribute vec4 a_Position;\n' +
     'attribute vec4 a_Color;\n' +
-    'uniform mat4 u_ModelMatrix;\n' +
+    'uniform mat4 u_ViewMatrix;\n' +
     'varying vec4 v_Color;\n' +
     'void main() {\n' +
-    '   gl_Position = u_ModelMatrix * a_Position;\n' +
+    '   gl_Position = u_ViewMatrix * a_Position;\n' +
     '   gl_PointSize = 10.0;\n' +
     '   v_Color = a_Color;\n' +
     '}\n';
@@ -277,6 +282,30 @@ var FSHADER_SOURCE =
     'void main() {\n' +
     '  gl_FragColor = u_ColorMatrix * v_Color;\n' +
     '}\n';
+*/
+
+
+var VSHADER_SOURCE =
+    'attribute vec4 a_Position;\n' +
+    'attribute vec4 a_Color;\n' +
+    'uniform mat4 u_ViewMatrix;\n' +
+    'uniform mat4 u_ProjMatrix;\n' +
+    'varying vec4 v_Color;\n' +
+    'void main() {\n' +
+    '  gl_Position = u_ProjMatrix * u_ViewMatrix * a_Position;\n' +
+    '  v_Color = a_Color;\n' +
+    '}\n';
+
+// Fragment shader program
+var FSHADER_SOURCE =
+    '#ifdef GL_ES\n' +
+    'precision mediump float;\n' +
+    '#endif\n' +
+    'varying vec4 v_Color;\n' +
+    'void main() {\n' +
+    '  gl_FragColor = v_Color;\n' +
+    '}\n';
+
 
 function initCfg() {
     gui = new dat.GUI({ name: 'GUI' });
@@ -571,69 +600,71 @@ function initVertexBuffer() {
     return Info.n;
 }
 
-function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
+function drawScene(interval, u_ViewMatrix, viewMatrix) {
     if (!config.Env.Pause && !hasTarget && !dragMode) {
         console.debug(`Update Target!`);
         mousePos[0] = (2 * Math.random() - 1);
         mousePos[1] = (2 * Math.random() - 1);
         hasTarget = true;
     }
-    modelMatrix.setIdentity();
-    colorMatrix.setIdentity();
+    // viewMatrix.setIdentity();
+    // colorMatrix.setIdentity();
 
     // Clear
     // gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
-    gl.clearColor(0.25, 0.2, 0.25, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // gl.clearColor(0.25, 0.2, 0.25, 1.0);
+    // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // GroundGrid
-    drawGroundGrid(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+    drawGroundGrid(interval, viewMatrix, u_ViewMatrix);
+
+    // console.log(Info)
 
     // EnderDragon
     // Body
-    drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+    drawEnderDragonBody(interval, viewMatrix, u_ViewMatrix);
 
     // Fin
-    pushMatrix(modelMatrix);
-    drawEnderDragonFin(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
-    modelMatrix = popMatrix();
+    pushMatrix(viewMatrix);
+    drawEnderDragonFin(interval, viewMatrix, u_ViewMatrix);
+    viewMatrix = popMatrix();
 
     // Neck + Head
-    pushMatrix(modelMatrix);
-    pushMatrix(colorMatrix);
+    pushMatrix(viewMatrix);
+    // pushMatrix(colorMatrix);
     for (let i = 1; i <= config.EnderDragon.Neck.Num; i++) {
-        drawEnderDragonNeck(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
+        drawEnderDragonNeck(interval, viewMatrix, u_ViewMatrix, idx = i);
     }
-    colorMatrix = popMatrix();
-    drawEnderDragonHead(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix)
-    modelMatrix = popMatrix();
+    // colorMatrix = popMatrix();
+    drawEnderDragonHead(interval, viewMatrix, u_ViewMatrix)
+    viewMatrix = popMatrix();
 
     // Tail
-    pushMatrix(modelMatrix);
+    pushMatrix(viewMatrix);
     for (let i = 1; i <= config.EnderDragon.Tail.Num; i++) {
-        drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
+        drawEnderDragonTail(interval, viewMatrix, u_ViewMatrix, idx = i);
     }
-    modelMatrix = popMatrix();
+    viewMatrix = popMatrix();
 
     // Wing
-    pushMatrix(modelMatrix);
-    drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = 1);
-    modelMatrix = popMatrix();
+    pushMatrix(viewMatrix);
+    drawEnderDragonWing1(interval, viewMatrix, u_ViewMatrix, idx = 1);
+    viewMatrix = popMatrix();
 
-    pushMatrix(modelMatrix);
-    drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = 2);
-    modelMatrix = popMatrix();
+    pushMatrix(viewMatrix);
+    drawEnderDragonWing1(interval, viewMatrix, u_ViewMatrix, idx = 2);
+    viewMatrix = popMatrix();
 
-    // pushMatrix(modelMatrix);
-    // modelMatrix = popMatrix();
-    modelMatrix.setIdentity();
+    // pushMatrix(viewMatrix);
+    // viewMatrix = popMatrix();
+    viewMatrix.setIdentity();
     for (let i = 1; i <= config.Clover.Stem.Num; i++) {
-        drawCloverStem(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
+        drawCloverStem(interval, viewMatrix, u_ViewMatrix, idx = i);
     }
-    drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+    drawCloverStamen(interval, viewMatrix, u_ViewMatrix);
 
     for (let i = 1; i <= config.Clover.Petal.Num; i++) {
-        drawCloverPetal(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
+        drawCloverPetal(interval, viewMatrix, u_ViewMatrix, idx = i);
     }
 }
 
@@ -778,32 +809,48 @@ async function main() {
         return;
     }
 
-    var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
-    if (!u_ModelMatrix) {
-        console.log('Failed to get the storage location of u_ModelMatrix');
-        return;
-    }
-    var u_ColorMatrix = gl.getUniformLocation(gl.program, 'u_ColorMatrix');
-    if (!u_ColorMatrix) {
-        console.log('Failed to get the storage location of u_ColorMatrix');
+    var u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ViewMatrix');
+    if (!u_ViewMatrix) {
+        console.log('Failed to get the storage location of u_ViewMatrix');
         return;
     }
 
-    gl.enable(gl.DEPTH_TEST);
-    gl.clearDepth(0.0);
-    gl.depthFunc(gl.GREATER);
+    var u_ProjMatrix = gl.getUniformLocation(gl.program, 'u_ProjMatrix');
+    if (!u_ProjMatrix) {
+        console.log('Failed to get the storage location of u_ProjMatrix');
+        return;
+    }
+
+    // var u_ColorMatrix = gl.getUniformLocation(gl.program, 'u_ColorMatrix');
+    // if (!u_ColorMatrix) {
+    //     console.log('Failed to get the storage location of u_ColorMatrix');
+    //     return;
+    // }
+
+    // gl.enable(gl.DEPTH_TEST);
+    // gl.clearDepth(0.0);
+    // gl.depthFunc(gl.GREATER);
+
+    var projMatrix = new Matrix4();
+    projMatrix.setPerspective(30, canvas.width / canvas.height, 1, 100);
+    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
 
     let tick = () => {
         let now = Date.now();
         let interval = now - g_last;
         g_last = now;
-        draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
+        draw(interval, u_ViewMatrix, viewMatrix);
         requestAnimationFrame(tick, canvas);
     };
     tick();
 }
 
 function updateInfo(Level1, Level2, Vertices) {
+    if (Level2 == 'GroundGrid') {
+        floatsPerVertex = 6;
+    } else {
+        floatsPerVertex = 7;
+    }
     Info[Level1][Level2].vertices = Vertices;
     Info[Level1][Level2].position = Info.n;
     Info[Level1][Level2].n = Vertices.length / floatsPerVertex;
@@ -841,6 +888,7 @@ function rotate(interval, Level1, Level2, reciprocate) {
 }
 
 function defGroundGrid() {
+    floatsPerVertex = 6;
     //==============================================================================
     // Create a list of vertices that create a large grid of lines in the x,y plane
     // centered at x=y=z=0.  Draw this shape using the GL_LINES primitive.
@@ -893,9 +941,46 @@ function defGroundGrid() {
     }
 
     updateInfo('Env', 'GroundGrid', GroundGrid_Vertices);
+    floatsPerVertex = 7;
 }
 
-function drawGroundGrid(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
-    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
-    gl.drawArrays(gl.TRIANGLES, Info.Env.GroundGrid.position, Info.Env.GroundGrid.n);
+function drawGroundGrid(interval, viewMatrix, u_ViewMatrix) {
+    gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
+    gl.drawArrays(gl.LINES, Info.Env.GroundGrid.position, Info.Env.GroundGrid.n);
+}
+
+function draw(interval, u_ViewMatrix, viewMatrix) {
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    viewMatrix.setIdentity();
+    viewMatrix.perspective(42.0,   // FOVY: top-to-bottom vertical image angle, in degrees
+        1.0,   // Image Aspect Ratio: camera lens width/height
+        1.0,   // camera z-near distance (always positive; frustum begins at z = -znear)
+        1000);  // camera z-far distance (always positive; frustum ends at z = -zfar)
+
+
+    gl.viewport(0,
+        0,
+        gl.drawingBufferWidth / 2,
+        gl.drawingBufferHeight);
+
+    viewMatrix.lookAt(5, 5, 3,    // center of projection
+        -1, -2, -0.5,	// look-at point 
+        0, 0, 1);	// View UP vector.
+    gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
+
+    // Draw the scene:
+    drawScene(interval, u_ViewMatrix, viewMatrix);
+
+    // gl.viewport(gl.drawingBufferWidth / 2,
+    //     0,
+    //     gl.drawingBufferWidth / 2,
+    //     gl.drawingBufferHeight);
+
+    // // but use a different 'view' matrix:
+    // viewMatrix.setLookAt(g_EyeY, g_EyeX, g_EyeZ,
+    //     0, 0, 0,
+    //     0, 1, 0);
+
+    // gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
+    // drawScene(interval, u_ViewMatrix, viewMatrix);
 }
