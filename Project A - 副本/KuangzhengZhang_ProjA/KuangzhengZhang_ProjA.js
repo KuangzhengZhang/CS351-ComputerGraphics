@@ -3,7 +3,7 @@ let Config = function () {
         Pause: true,
         bgClr: [0, 229, 238, 1],
 
-        Width: 650,
+        Width: 1300,
         Height: 650
     }
 
@@ -563,21 +563,31 @@ function initVertexBuffer() {
     return Info.n;
 }
 
-function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
+function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     if (!config.Env.Pause && !hasTarget && !dragMode) {
         console.debug(`Update Target!`);
         mousePos[0] = (2 * Math.random() - 1);
         mousePos[1] = (2 * Math.random() - 1);
         hasTarget = true;
     }
-    modelMatrix.setIdentity();
+    // modelMatrix.setIdentity();
     colorMatrix.setIdentity();
 
     // Clear
-    gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
+    // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    modelMatrix.perspective(42.0,   // FOVY: top-to-bottom vertical image angle, in degrees
+        1.0,   // Image Aspect Ratio: camera lens width/height
+        1.0,   // camera z-near distance (always positive; frustum begins at z = -znear)
+        1000);  // camera z-far distance (always positive; frustum ends at z = -zfar)
+
+    modelMatrix.lookAt(5, 5, 3,    // center of projection
+        -1, -2, -0.5,	// look-at point 
+        0, 0, 1);	// View UP vector.
 
     // EnderDragon
+    pushMatrix(modelMatrix);
     // Body
     drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
 
@@ -613,8 +623,8 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     modelMatrix = popMatrix();
 
     // pushMatrix(modelMatrix);
-    // modelMatrix = popMatrix();
-    modelMatrix.setIdentity();
+    modelMatrix = popMatrix();
+    // modelMatrix.setIdentity();
     for (let i = 1; i <= config.Clover.Stem.Num; i++) {
         drawCloverStem(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
@@ -778,8 +788,8 @@ async function main() {
     }
 
     gl.enable(gl.DEPTH_TEST);
-    gl.clearDepth(0.0);
-    gl.depthFunc(gl.GREATER);
+    // gl.clearDepth(0.0);
+    // gl.depthFunc(gl.GREATER);
 
     let tick = () => {
         let now = Date.now();
@@ -826,4 +836,110 @@ function rotate(interval, Level1, Level2, reciprocate) {
             config[Level1][Level2].angle %= config[Level1][Level2].rotMaxAngle - config[Level1][Level2].rotMinAngle;
         }
     }
+}
+
+function defGroundGrid() {
+    floatsPerVertex = 6;
+    //==============================================================================
+    // Create a list of vertices that create a large grid of lines in the x,y plane
+    // centered at x=y=z=0.  Draw this shape using the GL_LINES primitive.
+
+    var xcount = 100;			// # of lines to draw in x,y to make the grid.
+    var ycount = 100;
+    var xymax = 50.0;			// grid size; extends to cover +/-xymax in x and y.
+    var xColr = new Float32Array([1.0, 1.0, 0.3]);	// bright yellow
+    var yColr = new Float32Array([0.5, 1.0, 0.5]);	// bright green.
+
+    // Create an (global) array to hold this ground-plane's vertices:
+    let GroundGrid_Vertices = new Float32Array(floatsPerVertex * 2 * (xcount + ycount));
+    // draw a grid made of xcount+ycount lines; 2 vertices per line.
+
+    var xgap = xymax / (xcount - 1);		// HALF-spacing between lines in x,y;
+    var ygap = xymax / (ycount - 1);		// (why half? because v==(0line number/2))
+
+    // First, step thru x values as we make vertical lines of constant-x:
+    for (v = 0, j = 0; v < 2 * xcount; v++, j += floatsPerVertex) {
+        if (v % 2 == 0) {	// put even-numbered vertices at (xnow, -xymax, 0)
+            GroundGrid_Vertices[j] = -xymax + (v) * xgap;	// x
+            GroundGrid_Vertices[j + 1] = -xymax;								// y
+            GroundGrid_Vertices[j + 2] = 0.0;									// z
+        }
+        else {				// put odd-numbered vertices at (xnow, +xymax, 0).
+            GroundGrid_Vertices[j] = -xymax + (v - 1) * xgap;	// x
+            GroundGrid_Vertices[j + 1] = xymax;								// y
+            GroundGrid_Vertices[j + 2] = 0.0;									// z
+        }
+        GroundGrid_Vertices[j + 3] = xColr[0];			// red
+        GroundGrid_Vertices[j + 4] = xColr[1];			// grn
+        GroundGrid_Vertices[j + 5] = xColr[2];			// blu
+    }
+    // Second, step thru y values as wqe make horizontal lines of constant-y:
+    // (don't re-initialize j--we're adding more vertices to the array)
+    for (v = 0; v < 2 * ycount; v++, j += floatsPerVertex) {
+        if (v % 2 == 0) {		// put even-numbered vertices at (-xymax, ynow, 0)
+            GroundGrid_Vertices[j] = -xymax;								// x
+            GroundGrid_Vertices[j + 1] = -xymax + (v) * ygap;	// y
+            GroundGrid_Vertices[j + 2] = 0.0;									// z
+        }
+        else {					// put odd-numbered vertices at (+xymax, ynow, 0).
+            GroundGrid_Vertices[j] = xymax;								// x
+            GroundGrid_Vertices[j + 1] = -xymax + (v - 1) * ygap;	// y
+            GroundGrid_Vertices[j + 2] = 0.0;									// z
+        }
+        GroundGrid_Vertices[j + 3] = yColr[0];			// red
+        GroundGrid_Vertices[j + 4] = yColr[1];			// grn
+        GroundGrid_Vertices[j + 5] = yColr[2];			// blu
+    }
+
+    updateInfo('Env', 'GroundGrid', GroundGrid_Vertices);
+    floatsPerVertex = 7;
+}
+
+function drawGroundGrid(interval, modelMatrix, u_ModelMatrix) {
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.drawArrays(gl.LINES, Info.Env.GroundGrid.position, Info.Env.GroundGrid.n);
+}
+
+function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
+    gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    modelMatrix.setIdentity();
+
+    // 1
+    modelMatrix.perspective(60.0,   // FOVY: top-to-bottom vertical image angle, in degrees
+        1.0,   // Image Aspect Ratio: camera lens width/height
+        1,   // camera z-near distance (always positive; frustum begins at z = -znear)
+        1000);  // camera z-far distance (always positive; frustum ends at z = -zfar)
+
+
+    gl.viewport(0,
+        0,
+        gl.drawingBufferWidth / 2,
+        gl.drawingBufferHeight);
+
+    modelMatrix.lookAt(1, -2, 1,    // center of projection
+        0, 0, 0,	// look-at point 
+        0, 0, 1);	// View UP vector.
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+
+    // Draw the scene:
+    drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
+
+    // 2
+    modelMatrix.perspective(15.0,   // FOVY: top-to-bottom vertical image angle, in degrees
+        1.0,   // Image Aspect Ratio: camera lens width/height
+        1.0,   // camera z-near distance (always positive; frustum begins at z = -znear)
+        1000);  // camera z-far distance (always positive; frustum ends at z = -zfar)
+    gl.viewport(gl.drawingBufferWidth / 2,
+        0,
+        gl.drawingBufferWidth / 2,
+        gl.drawingBufferHeight);
+
+    // but use a different 'view' matrix:
+    modelMatrix.lookAt(-5, -5, 3,    // center of projection
+        -1, 2, -0.5,	// look-at point 
+        0, 0, 1);	// View UP vector.
+
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
 }

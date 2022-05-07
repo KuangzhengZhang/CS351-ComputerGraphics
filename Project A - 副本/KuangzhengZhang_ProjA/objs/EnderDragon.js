@@ -24,7 +24,7 @@ function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
         hasTarget = false;
     }
 
-    modelMatrix.setTranslate(EnderDragonPos[0], EnderDragonPos[1], EnderDragonPos[2]);
+    modelMatrix.translate(EnderDragonPos[0], EnderDragonPos[1], EnderDragonPos[2]);
     modelMatrix.scale(config.EnderDragon.Size, config.EnderDragon.Size, config.EnderDragon.Size);
 
     // Rotate
@@ -35,7 +35,7 @@ function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-    colorMatrix.setTranslate(config.EnderDragon.Body.Clr[0] / 255, config.EnderDragon.Body.Clr[1] / 255, config.EnderDragon.Body.Clr[2] / 255);
+    colorMatrix.translate(config.EnderDragon.Body.Clr[0] / 255, config.EnderDragon.Body.Clr[1] / 255, config.EnderDragon.Body.Clr[2] / 255);
     gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, Info.EnderDragon.Body.position, Info.EnderDragon.Body.n);
@@ -62,7 +62,7 @@ function drawEnderDragonNeck(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-    colorMatrix.setTranslate(config.EnderDragon.Neck.Clr[0] / 255, config.EnderDragon.Neck.Clr[1] / 255, config.EnderDragon.Neck.Clr[2] / 255);
+    colorMatrix.translate(config.EnderDragon.Neck.Clr[0] / 255, config.EnderDragon.Neck.Clr[1] / 255, config.EnderDragon.Neck.Clr[2] / 255);
     gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
     gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Neck.position, Info.EnderDragon.Neck.n);
@@ -205,7 +205,7 @@ function drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-    colorMatrix.setTranslate(config.EnderDragon.Tail.Clr[0] / 255, config.EnderDragon.Tail.Clr[1] / 255, config.EnderDragon.Tail.Clr[2] / 255);
+    colorMatrix.translate(config.EnderDragon.Tail.Clr[0] / 255, config.EnderDragon.Tail.Clr[1] / 255, config.EnderDragon.Tail.Clr[2] / 255);
     gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
     gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Tail.position, Info.EnderDragon.Tail.n);
@@ -317,7 +317,7 @@ function drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, colorMatrix,
 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-    colorMatrix.setTranslate(config.EnderDragon.Wing1.Clr[0] / 255, config.EnderDragon.Wing1.Clr[1] / 255, config.EnderDragon.Wing1.Clr[2] / 255);
+    colorMatrix.translate(config.EnderDragon.Wing1.Clr[0] / 255, config.EnderDragon.Wing1.Clr[1] / 255, config.EnderDragon.Wing1.Clr[2] / 255);
     gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
     gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Wing1.position, Info.EnderDragon.Wing1.n);
@@ -526,7 +526,7 @@ function defCuboid(w, OffsetX, h, OffsetY, l, OffsetZ, Level1, Level2) {
 function drawEnderDragonFin(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-    // colorMatrix.setTranslate(config.EnderDragon.Fin.Clr[0] / 255, config.EnderDragon.Fin.Clr[1] / 255, config.EnderDragon.Fin.Clr[2] / 255);
+    // colorMatrix.translate(config.EnderDragon.Fin.Clr[0] / 255, config.EnderDragon.Fin.Clr[1] / 255, config.EnderDragon.Fin.Clr[2] / 255);
     // gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
     gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Fin.position, Info.EnderDragon.Fin.n);
@@ -546,7 +546,7 @@ function drawEnderDragonHead(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Head.position, Info.EnderDragon.Head.n);
 
-    colorMatrix.setTranslate(config.EnderDragon.Head.Clr[0] / 255, config.EnderDragon.Head.Clr[1] / 255, config.EnderDragon.Head.Clr[2] / 255);
+    colorMatrix.translate(config.EnderDragon.Head.Clr[0] / 255, config.EnderDragon.Head.Clr[1] / 255, config.EnderDragon.Head.Clr[2] / 255);
     gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
     // modelMatrix = popMatrix();
