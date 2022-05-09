@@ -1,7 +1,8 @@
 let Config = function () {
     this.Env = {
         Pause: true,
-        bgClr: [0, 229, 238, 1],
+        bgClr: [0, 191, 255, 1],
+        // bgClr: [0, 0, 0, 1],
 
         Width: 1300,
         Height: 650
@@ -152,25 +153,54 @@ let Config = function () {
     }
 };
 
-// Camera
-var g_EyeX = 0.20, g_EyeY = 0.25, g_EyeZ = 4.25;
-
 // const
-let floatsPerVertex = 7;
+const floatsPerVertex = 7;
 
 let gl;
 let canvas;
 let config = new Config();
 let gui;
+let interval;
 
-let viewMatrix = new Matrix4();
 let projMatrix = new Matrix4();
+let modelMatrix = new Matrix4();
+let colorMatrix = new Matrix4();
+
+// lookAt Function
+// eye
+let eye = {
+    x: 0,
+    y: -5,
+    z: 0,
+    fov: 35,
+    speed: 0.01
+}
+let at = {
+    x: 0,
+    y: 0,
+    z: 0,
+    vertivalAngle: 90,
+    horizontalAngle: 90
+}
+let up = {
+    x: 0,
+    y: 0,
+    z: 1
+}
+// z
+let z = {
+    near: 1,
+    far: 10
+}
+
+// Matrix
+let u_ProjMatrix, u_ModelMatrix, u_ColorMatrix;
 
 // Position
 let mousePos = [null, null];
 let premousePos = [null, null];
 let EnderDragonPos = [0, 0, 0];
-let CloverPos = [0, -1, 0];
+let CloverPos = [0, 0, 0];
 
 // Animation
 let g_last = Date.now();
@@ -178,7 +208,7 @@ let g_last = Date.now();
 // Mouse
 let dragMode = false;
 
-// random
+// Random
 let hasTarget = false;
 
 let vertices;
@@ -263,14 +293,14 @@ document.onkeydown = keyDown;
 document.onkeyup = keyUp;
 // document.onkeypress = keyPress;
 
-/*
 var VSHADER_SOURCE =
     'attribute vec4 a_Position;\n' +
     'attribute vec4 a_Color;\n' +
-    'uniform mat4 u_ViewMatrix;\n' +
+    'uniform mat4 u_ProjMatrix;\n' +
+    'uniform mat4 u_ModelMatrix;\n' +
     'varying vec4 v_Color;\n' +
     'void main() {\n' +
-    '   gl_Position = u_ViewMatrix * a_Position;\n' +
+    '   gl_Position = u_ProjMatrix * u_ModelMatrix * a_Position;\n' +
     '   gl_PointSize = 10.0;\n' +
     '   v_Color = a_Color;\n' +
     '}\n';
@@ -282,35 +312,12 @@ var FSHADER_SOURCE =
     'void main() {\n' +
     '  gl_FragColor = u_ColorMatrix * v_Color;\n' +
     '}\n';
-*/
-
-
-var VSHADER_SOURCE =
-    'attribute vec4 a_Position;\n' +
-    'attribute vec4 a_Color;\n' +
-    'uniform mat4 u_ViewMatrix;\n' +
-    'uniform mat4 u_ProjMatrix;\n' +
-    'varying vec4 v_Color;\n' +
-    'void main() {\n' +
-    '  gl_Position = u_ProjMatrix * u_ViewMatrix * a_Position;\n' +
-    '  v_Color = a_Color;\n' +
-    '}\n';
-
-// Fragment shader program
-var FSHADER_SOURCE =
-    '#ifdef GL_ES\n' +
-    'precision mediump float;\n' +
-    '#endif\n' +
-    'varying vec4 v_Color;\n' +
-    'void main() {\n' +
-    '  gl_FragColor = v_Color;\n' +
-    '}\n';
-
 
 function initCfg() {
     gui = new dat.GUI({ name: 'GUI' });
     gui.width = 270;
     gui.remember(config);
+    gui.closed = true;
 
     // Env
     let Env = gui.addFolder('Env');
@@ -318,7 +325,7 @@ function initCfg() {
     Env.addColor(config.Env, 'bgClr').listen();
     // Env.add(config.Env, 'Width', 0, 1000).listen();
     // Env.add(config.Env, 'Height', 0, 1000).listen();
-    Env.open();
+    // Env.open();
 
     // EnderDragon
     let EnderDragon = gui.addFolder('EnderDragon');
@@ -382,7 +389,7 @@ function initCfg() {
         }
     });
     EnderDragonWing1.add(config.EnderDragon.Wing1, 'rotMaxAngle', config.EnderDragon.Wing1.rotMinAngle, 90).listen();
-    EnderDragon.open();
+    // EnderDragon.open();
 
     // Clover
     let Clover = gui.addFolder('Clover');
@@ -413,7 +420,7 @@ function initCfg() {
     CloverPetal.addColor(config.Clover.Petal, 'Clr').listen();
     CloverPetal.add(config.Clover.Petal, 'Size', 0, 2).listen();
     CloverPetal.add(config.Clover.Petal, 'Num', 1, 6, 1).listen();
-    Clover.open();
+    // Clover.open();
 }
 
 function getMousePos(event) {
@@ -493,26 +500,100 @@ function keyDown(event) {
     }
     console.debug(`KeyDownEvent: key='${event.key}' | code='${event.code}'`);
     switch (event.code) {
-        case 'KeyW':
+        // Arrow: aim camera in any direction without changing position
         case 'ArrowUp':
             event.preventDefault();
-            CloverPos[1] += 0.01;
+            at.vertivalAngle -= 1;
+            updateAt();
             break;
-        case 'KeyS':
         case 'ArrowDown':
             event.preventDefault();
-            CloverPos[1] -= 0.01;
+            at.vertivalAngle += 1;
+            updateAt();
             break;
-        case 'KeyA':
         case 'ArrowLeft':
             event.preventDefault();
-            CloverPos[0] -= 0.01;
+            at.horizontalAngle += 1;
+            updateAt();
             break;
-        case 'KeyD':
         case 'ArrowRight':
             event.preventDefault();
-            CloverPos[0] += 0.01;
+            at.horizontalAngle -= 1;
+            updateAt();
             break;
+
+        // WASD: 'strafe' sideways left/right
+        case 'KeyW':
+            /*
+            event.preventDefault();
+            CloverPos[1] += 0.01;
+            break; */
+            event.preventDefault();
+            eye.z += 0.01;
+            updateAt();
+            break;
+        case 'KeyS':
+            /*
+            event.preventDefault();
+            CloverPos[1] -= 0.01;
+            break; */
+            event.preventDefault();
+            eye.z -= 0.01;
+            updateAt();
+            break;
+        case 'KeyA':
+            /*
+            event.preventDefault();
+            CloverPos[0] -= 0.01;
+            break; */
+            event.preventDefault();
+            eye.x -= 0.01;
+            updateAt();
+            break;
+        case 'KeyD':
+            /* event.preventDefault();
+            CloverPos[0] += 0.01;
+            break; */
+            event.preventDefault();
+            eye.x += 0.01;
+            updateAt();
+            break;
+
+        // IJKL:
+        case 'KeyI':
+            /*
+            event.preventDefault();
+            CloverPos[1] += 0.01;
+            break; */
+            event.preventDefault();
+            moveBackFor(mode = 'forward');
+            break;
+        case 'KeyK':
+            /*
+            event.preventDefault();
+            CloverPos[1] -= 0.01;
+            break; */
+            event.preventDefault();
+            moveBackFor(mode = 'backward');
+            break;
+        case 'KeyJ':
+            /*
+            event.preventDefault();
+            CloverPos[0] -= 0.01;
+            break; */
+            event.preventDefault();
+            eye.x -= 0.01;
+            updateAt();
+            break;
+        case 'KeyL':
+            /* event.preventDefault();
+            CloverPos[0] += 0.01;
+            break; */
+            event.preventDefault();
+            eye.x += 0.01;
+            updateAt();
+            break;
+
         case 'Space':
             event.preventDefault();
             config.Env.Pause = !config.Env.Pause;
@@ -553,7 +634,7 @@ function initVertexBuffer() {
         if (k1 != n) {
             for (const [k2, v2] of Object.entries(v1)) {
                 if (k2 != n) {
-                    for (let i = 0; i < v2.n * 7; i++) {
+                    for (let i = 0; i < v2.n * floatsPerVertex; i++) {
                         vertices[v2.position * floatsPerVertex + i] = v2.vertices[i];
                     }
                 }
@@ -600,72 +681,82 @@ function initVertexBuffer() {
     return Info.n;
 }
 
-function drawScene(interval, u_ViewMatrix, viewMatrix) {
+function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     if (!config.Env.Pause && !hasTarget && !dragMode) {
         console.debug(`Update Target!`);
         mousePos[0] = (2 * Math.random() - 1);
         mousePos[1] = (2 * Math.random() - 1);
         hasTarget = true;
     }
-    // viewMatrix.setIdentity();
-    // colorMatrix.setIdentity();
+    // modelMatrix.setIdentity();
+    colorMatrix.setIdentity();
 
     // Clear
     // gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
-    // gl.clearColor(0.25, 0.2, 0.25, 1.0);
     // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    // GroundGrid
-    drawGroundGrid(interval, viewMatrix, u_ViewMatrix);
+    // modelMatrix.perspective(42.0,   // FOVY: top-to-bottom vertical image angle, in degrees
+    //     1.0,   // Image Aspect Ratio: camera lens width/height
+    //     1.0,   // camera z-near distance (always positive; frustum begins at z = -znear)
+    //     1000);  // camera z-far distance (always positive; frustum ends at z = -zfar)
 
-    // console.log(Info)
+    // modelMatrix.lookAt(5, 5, 3,    // center of projection
+    //     0, 0, 0,	// look-at point 
+    //     0, 0, 1);	// View UP vector.
 
     // EnderDragon
+    pushMatrix(modelMatrix);
     // Body
-    drawEnderDragonBody(interval, viewMatrix, u_ViewMatrix);
+    drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
 
     // Fin
-    pushMatrix(viewMatrix);
-    drawEnderDragonFin(interval, viewMatrix, u_ViewMatrix);
-    viewMatrix = popMatrix();
+    pushMatrix(modelMatrix);
+    drawEnderDragonFin(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+    modelMatrix = popMatrix();
 
     // Neck + Head
-    pushMatrix(viewMatrix);
-    // pushMatrix(colorMatrix);
+    pushMatrix(modelMatrix);
+    pushMatrix(colorMatrix);
     for (let i = 1; i <= config.EnderDragon.Neck.Num; i++) {
-        drawEnderDragonNeck(interval, viewMatrix, u_ViewMatrix, idx = i);
+        drawEnderDragonNeck(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
-    // colorMatrix = popMatrix();
-    drawEnderDragonHead(interval, viewMatrix, u_ViewMatrix)
-    viewMatrix = popMatrix();
+    colorMatrix = popMatrix();
+    drawEnderDragonHead(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix)
+    modelMatrix = popMatrix();
 
     // Tail
-    pushMatrix(viewMatrix);
+    pushMatrix(modelMatrix);
     for (let i = 1; i <= config.EnderDragon.Tail.Num; i++) {
-        drawEnderDragonTail(interval, viewMatrix, u_ViewMatrix, idx = i);
+        drawEnderDragonTail(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
-    viewMatrix = popMatrix();
+    modelMatrix = popMatrix();
 
     // Wing
-    pushMatrix(viewMatrix);
-    drawEnderDragonWing1(interval, viewMatrix, u_ViewMatrix, idx = 1);
-    viewMatrix = popMatrix();
+    pushMatrix(modelMatrix);
+    drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = 1);
+    modelMatrix = popMatrix();
 
-    pushMatrix(viewMatrix);
-    drawEnderDragonWing1(interval, viewMatrix, u_ViewMatrix, idx = 2);
-    viewMatrix = popMatrix();
+    pushMatrix(modelMatrix);
+    drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = 2);
+    modelMatrix = popMatrix();
 
-    // pushMatrix(viewMatrix);
-    // viewMatrix = popMatrix();
-    viewMatrix.setIdentity();
+    // Clover
+    modelMatrix = popMatrix();
+    pushMatrix(modelMatrix);
+    // modelMatrix.setIdentity();
     for (let i = 1; i <= config.Clover.Stem.Num; i++) {
-        drawCloverStem(interval, viewMatrix, u_ViewMatrix, idx = i);
+        drawCloverStem(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
-    drawCloverStamen(interval, viewMatrix, u_ViewMatrix);
+    drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
 
     for (let i = 1; i <= config.Clover.Petal.Num; i++) {
-        drawCloverPetal(interval, viewMatrix, u_ViewMatrix, idx = i);
+        drawCloverPetal(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
+    modelMatrix = popMatrix();
+
+    // GroundGrid
+    colorMatrix.setIdentity();
+    drawGroundGrid(interval, modelMatrix, u_ModelMatrix);
 }
 
 async function genVertices(data) {
@@ -809,48 +900,38 @@ async function main() {
         return;
     }
 
-    var u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ViewMatrix');
-    if (!u_ViewMatrix) {
-        console.log('Failed to get the storage location of u_ViewMatrix');
-        return;
-    }
-
-    var u_ProjMatrix = gl.getUniformLocation(gl.program, 'u_ProjMatrix');
+    u_ProjMatrix = gl.getUniformLocation(gl.program, 'u_ProjMatrix');
     if (!u_ProjMatrix) {
         console.log('Failed to get the storage location of u_ProjMatrix');
         return;
     }
+    u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+    if (!u_ModelMatrix) {
+        console.log('Failed to get the storage location of u_ModelMatrix');
+        return;
+    }
+    u_ColorMatrix = gl.getUniformLocation(gl.program, 'u_ColorMatrix');
+    if (!u_ColorMatrix) {
+        console.log('Failed to get the storage location of u_ColorMatrix');
+        return;
+    }
 
-    // var u_ColorMatrix = gl.getUniformLocation(gl.program, 'u_ColorMatrix');
-    // if (!u_ColorMatrix) {
-    //     console.log('Failed to get the storage location of u_ColorMatrix');
-    //     return;
-    // }
-
-    // gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.DEPTH_TEST);
     // gl.clearDepth(0.0);
     // gl.depthFunc(gl.GREATER);
 
-    var projMatrix = new Matrix4();
-    projMatrix.setPerspective(30, canvas.width / canvas.height, 1, 100);
-    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
-
     let tick = () => {
         let now = Date.now();
-        let interval = now - g_last;
+        interval = now - g_last;
         g_last = now;
-        draw(interval, u_ViewMatrix, viewMatrix);
+        // draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
+        drawResize(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
         requestAnimationFrame(tick, canvas);
     };
     tick();
 }
 
 function updateInfo(Level1, Level2, Vertices) {
-    if (Level2 == 'GroundGrid') {
-        floatsPerVertex = 6;
-    } else {
-        floatsPerVertex = 7;
-    }
     Info[Level1][Level2].vertices = Vertices;
     Info[Level1][Level2].position = Info.n;
     Info[Level1][Level2].n = Vertices.length / floatsPerVertex;
@@ -888,23 +969,24 @@ function rotate(interval, Level1, Level2, reciprocate) {
 }
 
 function defGroundGrid() {
-    floatsPerVertex = 6;
     //==============================================================================
     // Create a list of vertices that create a large grid of lines in the x,y plane
     // centered at x=y=z=0.  Draw this shape using the GL_LINES primitive.
 
-    var xcount = 100;			// # of lines to draw in x,y to make the grid.
-    var ycount = 100;
-    var xymax = 50.0;			// grid size; extends to cover +/-xymax in x and y.
-    var xColr = new Float32Array([1.0, 1.0, 0.3]);	// bright yellow
-    var yColr = new Float32Array([0.5, 1.0, 0.5]);	// bright green.
+    let xcount = 100;			// # of lines to draw in x,y to make the grid.
+    let ycount = 100;
+    let xymax = 50.0;			// grid size; extends to cover +/-xymax in x and y.
+    // let xColr = new Float32Array([1.0, 1.0, 0.3]);	// bright yellow
+    // let yColr = new Float32Array([0.5, 1.0, 0.5]);	// bright green.
+    let xColr = new Float32Array([1.0, 0.0, 0.0]);	// red
+    let yColr = new Float32Array([0.0, 1.0, 0.0]);	// green.
 
     // Create an (global) array to hold this ground-plane's vertices:
-    let GroundGrid_Vertices = new Float32Array(floatsPerVertex * 2 * (xcount + ycount));
+    GroundGrid_Vertices = new Float32Array(floatsPerVertex * 2 * (xcount + ycount));
     // draw a grid made of xcount+ycount lines; 2 vertices per line.
 
-    var xgap = xymax / (xcount - 1);		// HALF-spacing between lines in x,y;
-    var ygap = xymax / (ycount - 1);		// (why half? because v==(0line number/2))
+    let xgap = xymax / (xcount - 1);		// HALF-spacing between lines in x,y;
+    let ygap = xymax / (ycount - 1);		// (why half? because v==(0line number/2))
 
     // First, step thru x values as we make vertical lines of constant-x:
     for (v = 0, j = 0; v < 2 * xcount; v++, j += floatsPerVertex) {
@@ -912,15 +994,17 @@ function defGroundGrid() {
             GroundGrid_Vertices[j] = -xymax + (v) * xgap;	// x
             GroundGrid_Vertices[j + 1] = -xymax;								// y
             GroundGrid_Vertices[j + 2] = 0.0;									// z
+            GroundGrid_Vertices[j + 3] = 1.0;									// w.
         }
         else {				// put odd-numbered vertices at (xnow, +xymax, 0).
             GroundGrid_Vertices[j] = -xymax + (v - 1) * xgap;	// x
             GroundGrid_Vertices[j + 1] = xymax;								// y
             GroundGrid_Vertices[j + 2] = 0.0;									// z
+            GroundGrid_Vertices[j + 3] = 1.0;									// w.
         }
-        GroundGrid_Vertices[j + 3] = xColr[0];			// red
-        GroundGrid_Vertices[j + 4] = xColr[1];			// grn
-        GroundGrid_Vertices[j + 5] = xColr[2];			// blu
+        GroundGrid_Vertices[j + 4] = xColr[0];			// red
+        GroundGrid_Vertices[j + 5] = xColr[1];			// grn
+        GroundGrid_Vertices[j + 6] = xColr[2];			// blu
     }
     // Second, step thru y values as wqe make horizontal lines of constant-y:
     // (don't re-initialize j--we're adding more vertices to the array)
@@ -929,58 +1013,132 @@ function defGroundGrid() {
             GroundGrid_Vertices[j] = -xymax;								// x
             GroundGrid_Vertices[j + 1] = -xymax + (v) * ygap;	// y
             GroundGrid_Vertices[j + 2] = 0.0;									// z
+            GroundGrid_Vertices[j + 3] = 1.0;									// w.
         }
         else {					// put odd-numbered vertices at (+xymax, ynow, 0).
             GroundGrid_Vertices[j] = xymax;								// x
             GroundGrid_Vertices[j + 1] = -xymax + (v - 1) * ygap;	// y
             GroundGrid_Vertices[j + 2] = 0.0;									// z
+            GroundGrid_Vertices[j + 3] = 1.0;									// w.
         }
-        GroundGrid_Vertices[j + 3] = yColr[0];			// red
-        GroundGrid_Vertices[j + 4] = yColr[1];			// grn
-        GroundGrid_Vertices[j + 5] = yColr[2];			// blu
+        GroundGrid_Vertices[j + 4] = yColr[0];			// red
+        GroundGrid_Vertices[j + 5] = yColr[1];			// grn
+        GroundGrid_Vertices[j + 6] = yColr[2];			// blu
     }
 
     updateInfo('Env', 'GroundGrid', GroundGrid_Vertices);
-    floatsPerVertex = 7;
 }
 
-function drawGroundGrid(interval, viewMatrix, u_ViewMatrix) {
-    gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
+function drawGroundGrid(interval, modelMatrix, u_ModelMatrix) {
+    modelMatrix.rotate(-90.0, 1, 0, 0);
+    // modelMatrix.translate(0.0, 0.0, -0.6);
+    modelMatrix.scale(0.4, 0.4, 0.4);
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     gl.drawArrays(gl.LINES, Info.Env.GroundGrid.position, Info.Env.GroundGrid.n);
 }
 
-function draw(interval, u_ViewMatrix, viewMatrix) {
+function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
+    updateAt();
+    gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    viewMatrix.setIdentity();
-    viewMatrix.perspective(42.0,   // FOVY: top-to-bottom vertical image angle, in degrees
-        1.0,   // Image Aspect Ratio: camera lens width/height
-        1.0,   // camera z-near distance (always positive; frustum begins at z = -znear)
-        1000);  // camera z-far distance (always positive; frustum ends at z = -zfar)
+    let ratio = (canvas.width / 2) / canvas.height;
 
+    modelMatrix.setIdentity();
+    // modelMatrix.rotate(180, 0, 0, 1);
 
+    // 1 Perspective Camera
+    projMatrix.setIdentity();
+    projMatrix.setPerspective(eye.fov, ratio, z.near, z.far);
+    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
     gl.viewport(0,
         0,
-        gl.drawingBufferWidth / 2,
-        gl.drawingBufferHeight);
+        canvas.width / 2,
+        canvas.height);
 
-    viewMatrix.lookAt(5, 5, 3,    // center of projection
-        -1, -2, -0.5,	// look-at point 
-        0, 0, 1);	// View UP vector.
-    gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
+    pushMatrix(modelMatrix);
+    modelMatrix.lookAt(eye.x, eye.y, eye.z,   // center of projection
+        at.x, at.y, at.z,	// look-at point
+        up.x, up.y, up.z);	// View UP vector.
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    modelMatrix.rotate(90, 1, 0, 0);
+    drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
+    modelMatrix = popMatrix();
 
-    // Draw the scene:
-    drawScene(interval, u_ViewMatrix, viewMatrix);
+    // 2 Orthographic Camera
+    let bottom = - Math.tan(eye.fov * Math.PI / 360) * (z.near + (z.far - z.near) / 3);
+    let top = - bottom;
 
-    // gl.viewport(gl.drawingBufferWidth / 2,
-    //     0,
-    //     gl.drawingBufferWidth / 2,
-    //     gl.drawingBufferHeight);
+    let left = - ratio * top;
+    let right = - left;
 
-    // // but use a different 'view' matrix:
-    // viewMatrix.setLookAt(g_EyeY, g_EyeX, g_EyeZ,
-    //     0, 0, 0,
-    //     0, 1, 0);
+    let near = z.near;
+    let far = z.far;
+    projMatrix.setIdentity();
+    projMatrix.setOrtho(left, right, 					// left,right;
+        bottom, top, 					// bottom, top;
+        near, far);			// near, far; (always >=0)
 
-    // gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
-    // drawScene(interval, u_ViewMatrix, viewMatrix);
+    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
+    gl.viewport(canvas.width / 2,
+        0,
+        canvas.width / 2,
+        canvas.height);
+    modelMatrix.lookAt(eye.x, eye.y, eye.z,   // center of projection
+        at.x, at.y, at.z,	// look-at point
+        up.x, up.y, up.z);	// View UP vector.
+
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    modelMatrix.rotate(90, 1, 0, 0);
+    drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
+}
+
+function drawResize() {
+    //==============================================================================
+    // Called when user re-sizes their browser window , because our HTML file
+    // contains:  <body onload="main()" onresize="winResize()">
+
+    //Report our current browser-window contents:
+    // console.log(`Canvas width, height = ${canvas.width}, ${canvas.height}`);
+    // console.log(`Browser window: innerWidth, innerHeight = ${innerWidth}, ${innerHeight}`);
+    // http://www.w3schools.com/jsref/obj_window.asp
+
+
+    //Make canvas fill the top 0.7 of our browser window:
+    let xtraMargin = 25;    // keep a margin (otherwise, browser adds scroll-bars)
+    canvas.width = innerWidth - xtraMargin;
+    canvas.height = (innerHeight * 0.7) - xtraMargin;
+    // IMPORTANT!  Need a fresh drawing in the re-sized viewports.
+    draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);				// draw in all viewports.
+}
+
+function updateAt() {
+    let distance = Math.sqrt(Math.pow(at.x - eye.x, 2) + Math.pow(at.y - eye.y, 2) + Math.pow(at.z - eye.z, 2));
+    let theta = at.vertivalAngle * Math.PI / 180;
+    let phi = at.horizontalAngle * Math.PI / 180;
+    at.x = eye.x + distance * Math.sin(theta) * Math.cos(phi);
+    at.y = eye.y + distance * Math.sin(theta) * Math.sin(phi);
+    at.z = eye.z + distance * Math.cos(theta);
+}
+
+function moveBackFor(mode) {
+    let distance = Math.sqrt(Math.pow(at.x - eye.x, 2) + Math.pow(at.y - eye.y, 2) + Math.pow(at.z - eye.z, 2));
+    let dx = (at.x - eye.x) / distance;
+    let dy = (at.y - eye.y) / distance;
+    let dz = (at.z - eye.z) / distance;
+    if (mode === 'forward') {
+        at.x += dx * eye.speed;
+        eye.x += dx * eye.speed;
+        at.y += dy * eye.speed;
+        eye.y += dy * eye.speed;
+        at.z += dz * eye.speed;
+        eye.z += dz * eye.speed;
+    } else if (mode === 'backward') {
+        at.x -= dx * eye.speed;
+        eye.x -= dx * eye.speed;
+        at.y -= dy * eye.speed;
+        eye.y -= dy * eye.speed;
+        at.z -= dz * eye.speed;
+        eye.z -= dz * eye.speed;
+    }
+
 }
