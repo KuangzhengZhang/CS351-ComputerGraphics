@@ -3,28 +3,28 @@ function defEnderDragonBody() {
 }
 
 function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
-    if (!config.Env.Pause && !config.EnderDragon.Pause && mousePos[0] && mousePos[1] && (Math.abs(mousePos[0] - EnderDragonPos[0]) > 0.01 || Math.abs(mousePos[1] - EnderDragonPos[1]) > 0.01)) {
+    if (!config.Env.Pause && !config.EnderDragon.Pause && targetPos.x && targetPos.y && (Math.abs(targetPos.x - EnderDragonPos.x) > 0.01 || Math.abs(targetPos.y - EnderDragonPos.y) > 0.01)) {
         let dx, dy, distance;
-        dx = mousePos[0] - EnderDragonPos[0];
-        dy = mousePos[1] - EnderDragonPos[1];
+        dx = targetPos.x - EnderDragonPos.x;
+        dy = targetPos.y - EnderDragonPos.y;
         distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
         dx /= distance;
         dy /= distance;
         if (Math.abs((interval / 100000) * dx * config.EnderDragon.Body.trackSpeed - dx * distance) < 0 && Math.abs((interval / 100000) * dy * config.EnderDragon.Body.trackSpeed - dy * distance < 0)) {
             console.debug('Lock');
-            EnderDragonPos[0] = mousePos[0];
-            EnderDragonPos[1] = mousePos[1];
+            EnderDragonPos.x = targetPos.x;
+            EnderDragonPos.y = targetPos.y;
             hasTarget = false;
         } else {
             console.debug('Unlock');
-            EnderDragonPos[0] += (interval / 100000) * dx * config.EnderDragon.Body.trackSpeed;
-            EnderDragonPos[1] += (interval / 100000) * dy * config.EnderDragon.Body.trackSpeed;
+            EnderDragonPos.x += (interval / 100000) * dx * config.EnderDragon.Body.trackSpeed;
+            EnderDragonPos.y += (interval / 100000) * dy * config.EnderDragon.Body.trackSpeed;
         }
     } else {
         hasTarget = false;
     }
 
-    modelMatrix.translate(EnderDragonPos[0], EnderDragonPos[1], EnderDragonPos[2]);
+    modelMatrix.translate(EnderDragonPos.x, EnderDragonPos.y, EnderDragonPos.z);
     modelMatrix.scale(config.EnderDragon.Size, config.EnderDragon.Size, config.EnderDragon.Size);
 
     // Rotate
@@ -566,4 +566,25 @@ function drawEnderDragonHead(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
     // gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     // gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Head.position, Info.EnderDragon.Head.n);
     // modelMatrix = popMatrix();
+}
+
+function defAxes() {
+    let Axes_Vertices = new Float32Array([
+        0.0, 0.0, 0.0, 1.0, 0.3, 0.3, 0.3,	// X axis line (origin: gray)
+        1.3, 0.0, 0.0, 1.0, 1.0, 0.3, 0.3,	// 						 (endpoint: red)
+
+        0.0, 0.0, 0.0, 1.0, 0.3, 0.3, 0.3,	// Y axis line (origin: white)
+        0.0, 1.3, 0.0, 1.0, 0.3, 1.0, 0.3,	//						 (endpoint: green)
+
+        0.0, 0.0, 0.0, 1.0, 0.3, 0.3, 0.3,	// Z axis line (origin:white)
+        0.0, 0.0, 1.3, 1.0, 0.3, 0.3, 1.0,	//						 (endpoint: blue)
+    ])
+
+    updateInfo('EnderDragon', 'Axes', Axes_Vertices);
+}
+
+function drawAxes(modelMatrix, u_ModelMatrix) {
+    modelMatrix.rotate(-90, 1, 0, 0);
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.drawArrays(gl.LINES, Info.EnderDragon.Axes.position, Info.EnderDragon.Axes.n);
 }

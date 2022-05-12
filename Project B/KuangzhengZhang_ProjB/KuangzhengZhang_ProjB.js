@@ -8,6 +8,131 @@ let Config = function () {
         Height: 650
     }
 
+    this.Camera = {
+        PresetDir: {
+            yz45: () => {
+                camera = {
+                    x: 0,
+                    y: -5,
+                    z: 5,
+                    fov: 35,
+                    speed: 0.1
+                }
+                at = {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    vertivalAngle: 135,
+                    horizontalAngle: 90
+                }
+            },
+            up: () => {
+                camera = {
+                    x: 0,
+                    y: 0,
+                    z: 10,
+                    fov: 35,
+                    speed: 0.1
+                }
+                at = {
+                    x: 2,
+                    y: 2,
+                    z: 0,
+                    vertivalAngle: 180,
+                    horizontalAngle: 90
+                }
+            },
+            left: () => {
+                camera = {
+                    x: 0,
+                    y: 2,
+                    z: 0,
+                    fov: 35,
+                    speed: 0.1
+                }
+                at = {
+                    x: 1,
+                    y: 2,
+                    z: 0,
+                    vertivalAngle: 90,
+                    horizontalAngle: 0
+                }
+            },
+            front: () => {
+                camera = {
+                    x: 0,
+                    y: -5,
+                    z: 0,
+                    fov: 35,
+                    speed: 0.1
+                }
+                at = {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    vertivalAngle: 90,
+                    horizontalAngle: 90
+                }
+            },
+            Default: () => {
+                camera = {
+                    x: 0,
+                    y: -5,
+                    z: 0,
+                    fov: 35,
+                    speed: 0.1
+                }
+                at = {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    vertivalAngle: 90,
+                    horizontalAngle: 90
+                }
+            }
+        },
+        Ortho: {
+            Customize: false,
+            fov: 35,
+            left: -1.2699883488312842,
+            right: 1.2699883488312842,
+            bottom: -1.261195155515934,
+            top: 1.261195155515934,
+            near: 1,
+            far: 20
+        }
+    }
+
+    this.Torus = {
+        Pause: false,
+        Size: 0.3,
+        Body: {
+            Pause: false,
+            rotSpeed: 45,
+            rotMaxAngle: 180,
+            rotMinAngle: -180,
+
+            angle: 0
+        }
+    }
+
+    this.Icosahedron = {
+        Pause: false,
+        Size: 0.3,
+        Body: {
+            Pause: false,
+            rotSpeed: 45,
+            rotMaxAngle: 180,
+            rotMinAngle: -180,
+
+            // qNew: new Quaternion(0, 0, 0, 1),
+            qTot: new Quaternion(0, 0, 0, 1),
+            // qFin: new Quaternion(0, 0, 0, 1),
+
+            angle: 0,
+        }
+    }
+
     this.EnderDragon = {
         Pause: false,
         Size: 0.5,
@@ -156,32 +281,19 @@ let Config = function () {
 // const
 const floatsPerVertex = 7;
 
-let gl;
-let canvas;
+let gl, canvas, gui, interval;
 let config = new Config();
-let gui;
-let interval;
 
 let projMatrix = new Matrix4();
 let modelMatrix = new Matrix4();
+let quatMatrix = new Matrix4();
 let colorMatrix = new Matrix4();
 
 // lookAt Function
 // eye
-let eye = {
-    x: 0,
-    y: -5,
-    z: 0,
-    fov: 35,
-    speed: 0.01
-}
-let at = {
-    x: 0,
-    y: 0,
-    z: 0,
-    vertivalAngle: 90,
-    horizontalAngle: 90
-}
+let camera, at;
+config.Camera.PresetDir.Default();
+
 let up = {
     x: 0,
     y: 0,
@@ -190,17 +302,39 @@ let up = {
 // z
 let z = {
     near: 1,
-    far: 10
+    far: 20
 }
 
 // Matrix
 let u_ProjMatrix, u_ModelMatrix, u_ColorMatrix;
 
 // Position
-let mousePos = [null, null];
-let premousePos = [null, null];
-let EnderDragonPos = [0, 0, 0];
-let CloverPos = [0, 0, 0];
+let targetPos = {
+    x: null,
+    y: null
+};
+let mousePos = {
+    x: null,
+    y: null
+};
+let premousePos = {
+    x: null,
+    y: null
+};
+let dragTotal = {
+    x: 0,
+    y: 0
+}
+let EnderDragonPos = {
+    x: null,
+    y: null,
+    z: null
+};
+let CloverPos = {
+    x: null,
+    y: null,
+    z: null
+};
 
 // Animation
 let g_last = Date.now();
@@ -223,7 +357,28 @@ let Info = {
         },
         n: null
     },
+    Torus: {
+        Body: {
+            vertices: null,
+            n: null,
+            position: null
+        },
+        n: null
+    },
+    Icosahedron: {
+        Body: {
+            vertices: null,
+            n: null,
+            position: null
+        },
+        n: null
+    },
     EnderDragon: {
+        Axes: {
+            vertices: null,
+            n: null,
+            position: null
+        },
         Body: {
             vertices: null,
             n: null,
@@ -326,6 +481,24 @@ function initCfg() {
     // Env.add(config.Env, 'Width', 0, 1000).listen();
     // Env.add(config.Env, 'Height', 0, 1000).listen();
     // Env.open();
+
+    // Camera
+    let Camera = gui.addFolder('Camera');
+    let PresetCameraDir = Camera.addFolder('Preset Camera Direcction');
+    PresetCameraDir.add(config.Camera.PresetDir, 'yz45').name('Look From Y-Z 45 Degree');
+    PresetCameraDir.add(config.Camera.PresetDir, 'up').name('Look From Up');
+    PresetCameraDir.add(config.Camera.PresetDir, 'left').name('Look From Left');
+    PresetCameraDir.add(config.Camera.PresetDir, 'front').name('Look From Front');
+
+    let CustomeOrthoPara = Camera.addFolder('Customize Ortho Camera Parameters');
+    CustomeOrthoPara.add(config.Camera.Ortho, 'Customize').listen();
+    CustomeOrthoPara.add(config.Camera.Ortho, 'fov', 10, 40).listen();
+    CustomeOrthoPara.add(config.Camera.Ortho, 'left', -5, 0).listen();
+    CustomeOrthoPara.add(config.Camera.Ortho, 'right', 0, 5).listen();
+    CustomeOrthoPara.add(config.Camera.Ortho, 'bottom', -5, 0).listen();
+    CustomeOrthoPara.add(config.Camera.Ortho, 'top', 0, 5).listen();
+    CustomeOrthoPara.add(config.Camera.Ortho, 'near', 0, 1).listen();
+    CustomeOrthoPara.add(config.Camera.Ortho, 'far', 1, 100).listen();
 
     // EnderDragon
     let EnderDragon = gui.addFolder('EnderDragon');
@@ -449,9 +622,16 @@ function isMouseInCanvas() {
 }
 
 function mouseDown(event) {
-    if (isMouseInCanvas()) {
-        dragMode = true;
-    };
+    // if (isMouseInCanvas()) {
+    //     dragMode = true;
+    // };
+    let pos = getMousePos(event);
+    let x = pos.x;
+    let y = pos.y;
+
+    dragMode = true;
+    premousePos.x = x;
+    premousePos.y = y;
     console.debug(`MouseDownEvent: Position = (${event.offsetX}, ${event.offsetY})`);
 }
 
@@ -465,36 +645,47 @@ function mouseMove(event) {
     let x = pos.x;
     let y = pos.y;
 
+    /*
     // Update mousePos
     if (dragMode) {
-        // EnderDragonPos[0] = x;
-        // EnderDragonPos[1] = y;
+        // EnderDragonPos.x = x;
+        // EnderDragonPos.y = y;
 
         if (isMouseInCanvas()) {
-            if (x > mousePos[0]) {
+            if (x > mousePos.x) {
                 config.Clover.Stem.Xangle += 5;
                 config.Clover.Stem.Xangle %= 360;
             } else {
                 config.Clover.Stem.Xangle -= 5;
                 config.Clover.Stem.Xangle %= 360;
             }
-            mousePos[0] = x;
-            mousePos[1] = y;
+            mousePos.x = x;
+            mousePos.y = y;
         } else {
-            mousePos[0] = null;
-            mousePos[1] = null;
+            mousePos.x = null;
+            mousePos.y = null;
         }
     } else {
         if (isMouseInCanvas()) {
-            mousePos[0] = x;
-            mousePos[1] = y;
+            mousePos.x = x;
+            mousePos.y = y;
         }
+    }
+    */
+
+    if (dragMode) {
+        dragTotal.x += x - premousePos.x;
+        dragTotal.y += y - premousePos.y;
+        dragQuat(x - premousePos.x, y - premousePos.y);
+        premousePos.x = x;
+        premousePos.y = y;
     }
     document.getElementById('mousePos').innerHTML = `Mouse Position: (${x}, ${y})`;
     // console.debug(`MouseMoveEvent: Position = (${x}, ${y})`);
 }
 
 function keyDown(event) {
+    event.preventDefault();
     if (event.isComposing || event.keyCode === 229) {
         return;
     }
@@ -502,100 +693,64 @@ function keyDown(event) {
     switch (event.code) {
         // Arrow: aim camera in any direction without changing position
         case 'ArrowUp':
-            event.preventDefault();
-            at.vertivalAngle -= 1;
+            if (at.vertivalAngle >= 1 && at.vertivalAngle <= 180) {
+                at.vertivalAngle -= 1;
+            }
             updateAt();
             break;
         case 'ArrowDown':
-            event.preventDefault();
-            at.vertivalAngle += 1;
+            if (at.vertivalAngle >= 0 && at.vertivalAngle <= 179) {
+                at.vertivalAngle += 1;
+            }
             updateAt();
             break;
         case 'ArrowLeft':
-            event.preventDefault();
             at.horizontalAngle += 1;
             updateAt();
             break;
         case 'ArrowRight':
-            event.preventDefault();
             at.horizontalAngle -= 1;
             updateAt();
             break;
 
-        // WASD: 'strafe' sideways left/right
-        case 'KeyW':
-            /*
-            event.preventDefault();
-            CloverPos[1] += 0.01;
-            break; */
-            event.preventDefault();
-            eye.z += 0.01;
-            updateAt();
-            break;
-        case 'KeyS':
-            /*
-            event.preventDefault();
-            CloverPos[1] -= 0.01;
-            break; */
-            event.preventDefault();
-            eye.z -= 0.01;
-            updateAt();
-            break;
-        case 'KeyA':
-            /*
-            event.preventDefault();
-            CloverPos[0] -= 0.01;
-            break; */
-            event.preventDefault();
-            eye.x -= 0.01;
-            updateAt();
-            break;
-        case 'KeyD':
-            /* event.preventDefault();
-            CloverPos[0] += 0.01;
-            break; */
-            event.preventDefault();
-            eye.x += 0.01;
-            updateAt();
-            break;
-
-        // IJKL:
+        // IKJL: X Y Z
         case 'KeyI':
-            /*
-            event.preventDefault();
-            CloverPos[1] += 0.01;
-            break; */
-            event.preventDefault();
-            moveBackFor(mode = 'forward');
+            camera.z += 0.1;
+            at.z += 0.1;
+            // updateAt();
             break;
         case 'KeyK':
-            /*
-            event.preventDefault();
-            CloverPos[1] -= 0.01;
-            break; */
-            event.preventDefault();
-            moveBackFor(mode = 'backward');
+            camera.z -= 0.1;
+            at.z -= 0.1;
+            // updateAt();
             break;
         case 'KeyJ':
-            /*
-            event.preventDefault();
-            CloverPos[0] -= 0.01;
-            break; */
-            event.preventDefault();
-            eye.x -= 0.01;
-            updateAt();
+            camera.x -= 0.1;
+            at.x -= 0.1;
+            // updateAt();
             break;
         case 'KeyL':
-            /* event.preventDefault();
-            CloverPos[0] += 0.01;
-            break; */
-            event.preventDefault();
-            eye.x += 0.01;
-            updateAt();
+            camera.x += 0.1;
+            at.x += 0.1;
+            // updateAt();
             break;
 
+        // WSAD: move forward/backward in the gaze direction
+        case 'KeyW':
+            moveBackFor(mode = 'forward');
+            break;
+        case 'KeyS':
+            moveBackFor(mode = 'backward');
+            break;
+        case 'KeyA':
+            moveBackFor(mode = 'left');
+            break;
+        case 'KeyD':
+            moveBackFor(mode = 'right');
+            break;
+
+        // Other
         case 'Space':
-            event.preventDefault();
             config.Env.Pause = !config.Env.Pause;
             break;
         case 'KeyR':
@@ -616,6 +771,15 @@ function keyUp(event) {
 
 function initVertexBuffer() {
     defGroundGrid();
+    defAxes();
+
+    // Torus
+    defTorus();
+
+    // Icosahedron
+    defIcosahedron();
+
+    // EnderDragon
     defEnderDragonBody();
     defCuboid(w = 0.02, OffsetX = 0, h = 0.05, OffsetY = 0.1, l = 0.05, OffsetZ = 0, Level1 = 'EnderDragon', Level2 = 'Fin');
     defEnderDragonNeck();
@@ -623,6 +787,7 @@ function initVertexBuffer() {
     defEnderDragonTail();
     defEnderDragonWing1();
 
+    // Clover
     defCloverStem();
     defCloverStamen();
     defCloverPetal();
@@ -682,13 +847,12 @@ function initVertexBuffer() {
 }
 
 function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
-    if (!config.Env.Pause && !hasTarget && !dragMode) {
+    if (!config.Env.Pause && !hasTarget) {
         console.debug(`Update Target!`);
-        mousePos[0] = (2 * Math.random() - 1);
-        mousePos[1] = (2 * Math.random() - 1);
+        targetPos.x = 2 * Math.random() - 1;
+        targetPos.y = 2 * Math.random() - 1;
         hasTarget = true;
     }
-    // modelMatrix.setIdentity();
     colorMatrix.setIdentity();
 
     // Clear
@@ -706,8 +870,15 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
 
     // EnderDragon
     pushMatrix(modelMatrix);
+    pushMatrix(modelMatrix);
+    pushMatrix(modelMatrix);
+    pushMatrix(modelMatrix);
     // Body
     drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+
+    pushMatrix(modelMatrix);
+    drawAxes(modelMatrix, u_ModelMatrix);
+    modelMatrix = popMatrix();
 
     // Fin
     pushMatrix(modelMatrix);
@@ -743,20 +914,38 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     // Clover
     modelMatrix = popMatrix();
     pushMatrix(modelMatrix);
-    // modelMatrix.setIdentity();
     for (let i = 1; i <= config.Clover.Stem.Num; i++) {
         drawCloverStem(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
     drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+
+    pushMatrix(modelMatrix);
+    drawAxes(modelMatrix, u_ModelMatrix);
+    modelMatrix = popMatrix();
 
     for (let i = 1; i <= config.Clover.Petal.Num; i++) {
         drawCloverPetal(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
     modelMatrix = popMatrix();
 
+    // Torus
+    modelMatrix = popMatrix();
+    pushMatrix(modelMatrix);
+    drawTorus(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+    modelMatrix = popMatrix();
+
+    // Icosahedron
+    modelMatrix = popMatrix();
+    pushMatrix(modelMatrix);
+    drawIcosahedron(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, quatMatrix);
+    modelMatrix = popMatrix();
+
     // GroundGrid
     colorMatrix.setIdentity();
+    modelMatrix = popMatrix();
+    pushMatrix(modelMatrix);
     drawGroundGrid(interval, modelMatrix, u_ModelMatrix);
+    modelMatrix = popMatrix();
 }
 
 async function genVertices(data) {
@@ -921,6 +1110,7 @@ async function main() {
     // gl.depthFunc(gl.GREATER);
 
     let tick = () => {
+        showInfo();
         let now = Date.now();
         interval = now - g_last;
         g_last = now;
@@ -1030,7 +1220,7 @@ function defGroundGrid() {
 }
 
 function drawGroundGrid(interval, modelMatrix, u_ModelMatrix) {
-    modelMatrix.rotate(-90.0, 1, 0, 0);
+    modelMatrix.rotate(-90, 1, 0, 0);
     // modelMatrix.translate(0.0, 0.0, -0.6);
     modelMatrix.scale(0.4, 0.4, 0.4);
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
@@ -1043,52 +1233,64 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     let ratio = (canvas.width / 2) / canvas.height;
 
-    modelMatrix.setIdentity();
-    // modelMatrix.rotate(180, 0, 0, 1);
-
     // 1 Perspective Camera
+    modelMatrix.setIdentity();
     projMatrix.setIdentity();
-    projMatrix.setPerspective(eye.fov, ratio, z.near, z.far);
-    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
+    projMatrix.setPerspective(config.Camera.Ortho.fov, ratio, config.Camera.Ortho.near, config.Camera.Ortho.far);
     gl.viewport(0,
         0,
         canvas.width / 2,
         canvas.height);
 
-    pushMatrix(modelMatrix);
-    modelMatrix.lookAt(eye.x, eye.y, eye.z,   // center of projection
+    modelMatrix.lookAt(camera.x, camera.y, camera.z,   // center of projection
         at.x, at.y, at.z,	// look-at point
         up.x, up.y, up.z);	// View UP vector.
-    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     modelMatrix.rotate(90, 1, 0, 0);
+    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
-    modelMatrix = popMatrix();
 
     // 2 Orthographic Camera
-    let bottom = - Math.tan(eye.fov * Math.PI / 360) * (z.near + (z.far - z.near) / 3);
-    let top = - bottom;
+    let bottom, top, left, right, near, far;
+    if (!config.Camera.Ortho.Customize) {
+        bottom = - Math.tan(config.Camera.Ortho.fov * Math.PI / 360) * (z.near + (z.far - z.near) / 3);
+        top = - bottom;
 
-    let left = - ratio * top;
-    let right = - left;
+        left = - ratio * top;
+        right = - left;
 
-    let near = z.near;
-    let far = z.far;
+        near = z.near;
+        far = z.far;
+    } else {
+        bottom = config.Camera.Ortho.bottom;
+        top = config.Camera.Ortho.top;
+
+        left = config.Camera.Ortho.left;
+        right = config.Camera.Ortho.right;
+
+        // left = - ratio * top;
+        // right = - left;
+
+        near = config.Camera.Ortho.near;
+        far = config.Camera.Ortho.far;
+    }
+
+    modelMatrix.setIdentity();
     projMatrix.setIdentity();
     projMatrix.setOrtho(left, right, 					// left,right;
         bottom, top, 					// bottom, top;
         near, far);			// near, far; (always >=0)
 
-    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
     gl.viewport(canvas.width / 2,
         0,
         canvas.width / 2,
         canvas.height);
-    modelMatrix.lookAt(eye.x, eye.y, eye.z,   // center of projection
+    modelMatrix.lookAt(camera.x, camera.y, camera.z,   // center of projection
         at.x, at.y, at.z,	// look-at point
         up.x, up.y, up.z);	// View UP vector.
-
-    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     modelMatrix.rotate(90, 1, 0, 0);
+    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
 }
 
@@ -1112,33 +1314,51 @@ function drawResize() {
 }
 
 function updateAt() {
-    let distance = Math.sqrt(Math.pow(at.x - eye.x, 2) + Math.pow(at.y - eye.y, 2) + Math.pow(at.z - eye.z, 2));
     let theta = at.vertivalAngle * Math.PI / 180;
     let phi = at.horizontalAngle * Math.PI / 180;
-    at.x = eye.x + distance * Math.sin(theta) * Math.cos(phi);
-    at.y = eye.y + distance * Math.sin(theta) * Math.sin(phi);
-    at.z = eye.z + distance * Math.cos(theta);
+
+    at.x = camera.x + Math.sin(theta) * Math.cos(phi);
+    at.y = camera.y + Math.sin(theta) * Math.sin(phi);
+    at.z = camera.z + Math.cos(theta);
 }
 
 function moveBackFor(mode) {
-    let distance = Math.sqrt(Math.pow(at.x - eye.x, 2) + Math.pow(at.y - eye.y, 2) + Math.pow(at.z - eye.z, 2));
-    let dx = (at.x - eye.x) / distance;
-    let dy = (at.y - eye.y) / distance;
-    let dz = (at.z - eye.z) / distance;
+    let dx = at.x - camera.x;
+    let dy = at.y - camera.y;
+    let dz = at.z - camera.z;
+    let ddx, ddy;
     if (mode === 'forward') {
-        at.x += dx * eye.speed;
-        eye.x += dx * eye.speed;
-        at.y += dy * eye.speed;
-        eye.y += dy * eye.speed;
-        at.z += dz * eye.speed;
-        eye.z += dz * eye.speed;
+        at.x += dx * camera.speed;
+        camera.x += dx * camera.speed;
+        at.y += dy * camera.speed;
+        camera.y += dy * camera.speed;
+        at.z += dz * camera.speed;
+        camera.z += dz * camera.speed;
     } else if (mode === 'backward') {
-        at.x -= dx * eye.speed;
-        eye.x -= dx * eye.speed;
-        at.y -= dy * eye.speed;
-        eye.y -= dy * eye.speed;
-        at.z -= dz * eye.speed;
-        eye.z -= dz * eye.speed;
+        at.x -= dx * camera.speed;
+        camera.x -= dx * camera.speed;
+        at.y -= dy * camera.speed;
+        camera.y -= dy * camera.speed;
+        at.z -= dz * camera.speed;
+        camera.z -= dz * camera.speed;
+    } else if (mode === 'left') {
+        ddy = dx;
+        ddx = -dy;
+        at.x += ddx * camera.speed;
+        camera.x += ddx * camera.speed;
+        at.y += ddy * camera.speed;
+        camera.y += ddy * camera.speed;
+    } else if (mode === 'right') {
+        ddy = -dx;
+        ddx = dy;
+        at.x += ddx * camera.speed;
+        camera.x += ddx * camera.speed;
+        at.y += ddy * camera.speed;
+        camera.y += ddy * camera.speed;
     }
+}
 
+function showInfo() {
+    document.getElementById('camera').innerHTML = `Camera Position: (${camera.x}, ${camera.y}, ${camera.z})`;
+    document.getElementById('at').innerHTML = `at Position: (${at.x}, ${at.y}, ${at.z})`;
 }

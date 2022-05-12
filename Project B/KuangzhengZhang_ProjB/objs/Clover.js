@@ -5,7 +5,7 @@ function defCloverStem() {
 function drawCloverStem(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx) {
     switch (idx) {
         case 1:
-            modelMatrix.translate(CloverPos[0], CloverPos[1], CloverPos[2]);
+            modelMatrix.translate(CloverPos.x, CloverPos.y, CloverPos.z);
             modelMatrix.scale(config.Clover.Size, config.Clover.Size, config.Clover.Size);
             // Rotate
             rotate(interval, 'Clover', 'Stem', reciprocate = true);
