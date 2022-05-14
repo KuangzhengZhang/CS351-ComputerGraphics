@@ -86,5 +86,5 @@ function drawTorus(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMat
     rotate(interval, 'Torus', 'Body', reciprocate = false);
     modelMatrix.rotate(config.Torus.Body.angle, 0, 1, 1);
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
-    gl.drawArrays(gl.TRIANGLE_STRIP,Info.Torus.Body.position, Info.Torus.Body.n);
+    gl.drawArrays(gl.TRIANGLE_STRIP, Info.Torus.Body.position, Info.Torus.Body.n);
 }

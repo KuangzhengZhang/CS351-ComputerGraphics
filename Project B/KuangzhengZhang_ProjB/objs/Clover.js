@@ -31,6 +31,8 @@ function defCloverStamen() {
 }
 
 function drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
+    // projMatrix.multiply(modelMatrix);
+    projMatrix.translate(0, config.Clover.Stem.L, 0);
     modelMatrix.translate(0, config.Clover.Stem.L, 0);
     modelMatrix.scale(config.Clover.Stamen.Size, config.Clover.Stamen.Size, config.Clover.Stamen.Size);
     // Rotate

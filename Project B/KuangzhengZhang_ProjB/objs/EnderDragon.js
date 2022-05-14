@@ -11,12 +11,12 @@ function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
         dx /= distance;
         dy /= distance;
         if (Math.abs((interval / 100000) * dx * config.EnderDragon.Body.trackSpeed - dx * distance) < 0 && Math.abs((interval / 100000) * dy * config.EnderDragon.Body.trackSpeed - dy * distance < 0)) {
-            console.debug('Lock');
+            // console.debug('Lock');
             EnderDragonPos.x = targetPos.x;
             EnderDragonPos.y = targetPos.y;
             hasTarget = false;
         } else {
-            console.debug('Unlock');
+            // console.debug('Unlock');
             EnderDragonPos.x += (interval / 100000) * dx * config.EnderDragon.Body.trackSpeed;
             EnderDragonPos.y += (interval / 100000) * dy * config.EnderDragon.Body.trackSpeed;
         }
@@ -583,8 +583,13 @@ function defAxes() {
     updateInfo('EnderDragon', 'Axes', Axes_Vertices);
 }
 
-function drawAxes(modelMatrix, u_ModelMatrix) {
-    modelMatrix.rotate(-90, 1, 0, 0);
+function drawAxes(modelMatrix, u_ModelMatrix, name) {
+    if (name === 'Icosahedron') {
+        modelMatrix.scale(2, 2, 2);
+    } else {
+        modelMatrix.scale(0.5, 0.5, 0.5);
+        modelMatrix.rotate(-90, 1, 0, 0);
+    }
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     gl.drawArrays(gl.LINES, Info.EnderDragon.Axes.position, Info.EnderDragon.Axes.n);
 }

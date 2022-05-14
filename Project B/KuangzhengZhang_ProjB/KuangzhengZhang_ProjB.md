@@ -1,4 +1,4 @@
-# Project A: The Ender Dragon flying around the Clover
+# Project B: The Ender Dragon flying around the Clover in 3D world
 
 Name: Kuangzheng Zhang
 NetID: KZQ6536
@@ -7,24 +7,22 @@ NetID: KZQ6536
 
 ## User Guide
 
-explains your goals, and then gives user instructions on how to control the project as it runs
-
 ### Goal
 
-The goal of this Project A is to make several different 3D parts (Body, Neck, Head, Wing, Tail, Stem, Stamen, Petal) and assemble them to two 3D assemblies: Ender Dragon and Clover. These assemblies can move smoothly and continuously by itself, but user can also press certain key or move/drag mouse to interact with the scene.
-
+The goal of this Project B is to build a 3D world with Ender Dragon , Clover (Both from my Project A), Torus (From 7.14jt.BasicShapesCam) and Icosahedron and interact with it. The user can see through two different cameras: Perspective Camera and Orthographic Camera. The camera can be moved in three modes: ↑↓←→ (Aim camera in any direction without changing its position), WSAD (Move forward/backward in the gaze direction and strafe sideways left/right) and IKJL (Move along X/Z axis). The Icosahedron can be rotated by mouse dragging.
 
 
 ### Introduction
 
-After completely loaded, the user will see the Ender Dragon and the swing Clover. If the user doesn't interact, which means no key pressed and no mouse moved/clicked, the Ender Dragon will fly randomly and the Clover will swing continuously.
+After completely loaded, the user will see randomly flying Ender Dragon, continuously swing Clover, continuously rotating Torus and stationary Iconsahedron.
 
 
 
 #### Help
 
 -   Instructions are presented under canvas
--   Click `Open Control` on the upper right of the web page to open the Control Menu.
+-   Click `Open Control` on the upper right of the web page or press `/` to open the Control Menu.
+-   
 
 
 
@@ -33,6 +31,12 @@ After completely loaded, the user will see the Ender Dragon and the swing Clover
 ![](imgs/config.png)
 
 *Figure 1: Overall Config*
+
+
+
+![](imgs/Camera config.png)
+
+*Figure 2: Camera Config*
 
 
 
@@ -56,15 +60,18 @@ Each part can be configured independently. `Pause` is to pause and resume. `Clr`
 
 ### Keyboard Control
 
--   /: Toggle Control Menu
--   R: Revert configuration in Control Menu
--   Space: Pause/Resume globally
--   W/&#8593;, S/&#8595;, A/&#8592;, D/&#8594;: Move the position of the Clover
+- /: Toggle Control Menu
+- R: Revert configuration in Control Menu
+- Space: Pause/Resume globally
+
+### Camera Control
+1.  &#8593;, &#8595;, &#8592;, &#8594;: Aim camera in any direction without changing its position
+2.  W, S, A, D: Move forward/backward in the gaze direction and strafe sideways left/right
+3.  I, K, J, L: Move along X/Z axis
 
 ### Mouse Control
 
--   Move: The Ender Dragon will follow the mouse. It will start to move randomly after reach the mouse
--   Drag & Move: Rotate the Clover
+Drag & Move: Rotate the Icosahedron
 
 
 
@@ -72,15 +79,15 @@ Each part can be configured independently. `Pause` is to pause and resume. `Clr`
 
 ### Screen Shots
 
-![image-20220424225509954](imgs/Screen Shot 1.png)
+![](imgs/Screen Shot 1.png)
 
 *Figure 4: Initial State*
 
-In the initial state, both Ender Dragon and Clover are paused (`config.Env.Pause = true`)
+In the initial state, Torus, Ender Dragon and Clover are paused (`config.Env.Pause = true`)
 
 
 
-![image-20220424225738064](imgs/Screen Shot 2.png)
+![](imgs/Screen Shot 2.png)
 
 *Figure 5: Mouse Move Interaction and Free Move*
 
@@ -88,7 +95,7 @@ Once the mouse is inside of canvas, Ender Dragon starts to track mouse continuou
 
 
 
-![image-20220424230559110](imgs/Screen Shot 3.png)
+![](imgs/Screen Shot 3.png)
 
 *Figure 6: Mouse Drag Interaction and Color Configuration*
 
@@ -96,7 +103,7 @@ User can drag and move Mouse to rotate Clover around Y-axis. The color of every 
 
 
 
-![image-20220424231105280](imgs/Screen Shot 4.png)
+![](imgs/Screen Shot 4.png)
 
 *Figure 7: Keyboard Interaction, zoom in/out and Number of segments Configuration*
 

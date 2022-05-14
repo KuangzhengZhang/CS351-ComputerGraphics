@@ -9,7 +9,13 @@ let Config = function () {
     }
 
     this.Camera = {
+        Attach: true,
+        NavigationMode: {
+            active: false,
+            rotSpeed: 30
+        },
         PresetDir: {
+            Default: 'yz45',
             yz45: () => {
                 camera = {
                     x: 0,
@@ -42,22 +48,6 @@ let Config = function () {
                     horizontalAngle: 90
                 }
             },
-            left: () => {
-                camera = {
-                    x: 0,
-                    y: 2,
-                    z: 0,
-                    fov: 35,
-                    speed: 0.1
-                }
-                at = {
-                    x: 1,
-                    y: 2,
-                    z: 0,
-                    vertivalAngle: 90,
-                    horizontalAngle: 0
-                }
-            },
             front: () => {
                 camera = {
                     x: 0,
@@ -74,20 +64,36 @@ let Config = function () {
                     horizontalAngle: 90
                 }
             },
-            Default: () => {
+            left: () => {
                 camera = {
                     x: 0,
-                    y: -5,
+                    y: 2,
                     z: 0,
                     fov: 35,
                     speed: 0.1
                 }
                 at = {
-                    x: 0,
-                    y: 0,
+                    x: 1,
+                    y: 2,
                     z: 0,
                     vertivalAngle: 90,
-                    horizontalAngle: 90
+                    horizontalAngle: 0
+                }
+            },
+            right: () => {
+                camera = {
+                    x: 5,
+                    y: 2,
+                    z: 0,
+                    fov: 35,
+                    speed: 0.1
+                }
+                at = {
+                    x: 1,
+                    y: 2,
+                    z: 0,
+                    vertivalAngle: 90,
+                    horizontalAngle: 180
                 }
             }
         },
@@ -125,9 +131,7 @@ let Config = function () {
             rotMaxAngle: 180,
             rotMinAngle: -180,
 
-            // qNew: new Quaternion(0, 0, 0, 1),
             qTot: new Quaternion(0, 0, 0, 1),
-            // qFin: new Quaternion(0, 0, 0, 1),
 
             angle: 0,
         }
@@ -292,7 +296,7 @@ let colorMatrix = new Matrix4();
 // lookAt Function
 // eye
 let camera, at;
-config.Camera.PresetDir.Default();
+eval('config.Camera.PresetDir.' + config.Camera.PresetDir.Default + '();')
 
 let up = {
     x: 0,
@@ -333,7 +337,7 @@ let EnderDragonPos = {
 let CloverPos = {
     x: null,
     y: null,
-    z: null
+    z: 2
 };
 
 // Animation
@@ -484,11 +488,19 @@ function initCfg() {
 
     // Camera
     let Camera = gui.addFolder('Camera');
-    let PresetCameraDir = Camera.addFolder('Preset Camera Direcction');
+    // Camera.add(config.Camera, 'Attach');
+
+    let NavigationMode = Camera.addFolder('Flying-Airplane Navigation Mode');
+    NavigationMode.add(config.Camera.NavigationMode, 'active').listen();
+    NavigationMode.add(config.Camera.NavigationMode, 'rotSpeed', 1, 60).listen();
+
+
+    let PresetCameraDir = Camera.addFolder('Preset Camera');
     PresetCameraDir.add(config.Camera.PresetDir, 'yz45').name('Look From Y-Z 45 Degree');
     PresetCameraDir.add(config.Camera.PresetDir, 'up').name('Look From Up');
-    PresetCameraDir.add(config.Camera.PresetDir, 'left').name('Look From Left');
     PresetCameraDir.add(config.Camera.PresetDir, 'front').name('Look From Front');
+    PresetCameraDir.add(config.Camera.PresetDir, 'left').name('Look From Left');
+    PresetCameraDir.add(config.Camera.PresetDir, 'right').name('Look From Right');
 
     let CustomeOrthoPara = Camera.addFolder('Customize Ortho Camera Parameters');
     CustomeOrthoPara.add(config.Camera.Ortho, 'Customize').listen();
@@ -713,7 +725,7 @@ function keyDown(event) {
             updateAt();
             break;
 
-        // IKJL: X Y Z
+        // IKJL: X Z
         case 'KeyI':
             camera.z += 0.1;
             at.z += 0.1;
@@ -848,7 +860,7 @@ function initVertexBuffer() {
 
 function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     if (!config.Env.Pause && !hasTarget) {
-        console.debug(`Update Target!`);
+        // console.debug(`Update Target!`);
         targetPos.x = 2 * Math.random() - 1;
         targetPos.y = 2 * Math.random() - 1;
         hasTarget = true;
@@ -892,7 +904,7 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
         drawEnderDragonNeck(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
     colorMatrix = popMatrix();
-    drawEnderDragonHead(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix)
+    drawEnderDragonHead(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
     modelMatrix = popMatrix();
 
     // Tail
@@ -938,6 +950,11 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     modelMatrix = popMatrix();
     pushMatrix(modelMatrix);
     drawIcosahedron(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, quatMatrix);
+
+    pushMatrix(modelMatrix);
+    drawAxes(modelMatrix, u_ModelMatrix, name = 'Icosahedron');
+    modelMatrix = popMatrix();
+
     modelMatrix = popMatrix();
 
     // GroundGrid
@@ -1114,6 +1131,7 @@ async function main() {
         let now = Date.now();
         interval = now - g_last;
         g_last = now;
+        updateCamera(interval);
         // draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
         drawResize(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
         requestAnimationFrame(tick, canvas);
@@ -1308,7 +1326,7 @@ function drawResize() {
     //Make canvas fill the top 0.7 of our browser window:
     let xtraMargin = 25;    // keep a margin (otherwise, browser adds scroll-bars)
     canvas.width = innerWidth - xtraMargin;
-    canvas.height = (innerHeight * 0.7) - xtraMargin;
+    canvas.height = (innerHeight * 2 / 3) - xtraMargin;
     // IMPORTANT!  Need a fresh drawing in the re-sized viewports.
     draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);				// draw in all viewports.
 }
@@ -1361,4 +1379,14 @@ function moveBackFor(mode) {
 function showInfo() {
     document.getElementById('camera').innerHTML = `Camera Position: (${camera.x}, ${camera.y}, ${camera.z})`;
     document.getElementById('at').innerHTML = `at Position: (${at.x}, ${at.y}, ${at.z})`;
+}
+
+function updateCamera(interval) {
+    if (config.Camera.NavigationMode.active) {
+        let distance = Math.sqrt(Math.pow(camera.x, 2) + Math.pow(camera.y, 2));
+        at.horizontalAngle += interval * config.Camera.NavigationMode.rotSpeed / 1000.0;
+        at.horizontalAngle %= 360;
+        camera.x = -distance * Math.cos(at.horizontalAngle * Math.PI / 180);
+        camera.y = -distance * Math.sin(at.horizontalAngle * Math.PI / 180);
+    }
 }

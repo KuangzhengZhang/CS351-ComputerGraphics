@@ -5,7 +5,24 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KuangzhengZhang_ProjA</title>
+    <style>
+        /* From https://developer.mozilla.org/en-US/docs/Web/HTML/Element/kbd */
+        kbd {
+            background-color: #eee;
+            border-radius: 3px;
+            border: 1px solid #b4b4b4;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2),
+                0 2px 0 0 rgba(255, 255, 255, 0.7) inset;
+            color: #333;
+            display: inline-block;
+            font-size: 0.85em;
+            font-weight: 700;
+            line-height: 1;
+            padding: 2px 4px;
+            white-space: nowrap;
+        }
+    </style>
+    <title>KuangzhengZhang_ProjB</title>
 </head>
 
 <body onload="main()" onresize="drawResize()">
@@ -19,14 +36,17 @@
     <div id="at"></div>
 
     <h1>Keyboard Control</h1>
-    <p>/: Toggle Control Menu</p>
-    <p>R: Revert configuration in Control Menu</p>
-    <p>Space: Pause/Resume globally</p>
-    <p>W/&#8593;, S/&#8595;, A/&#8592;, D/&#8594;: Move the position of the Clover</p>
+    <p><kbd>/</kbd>: Toggle Control Menu</p>
+    <p><kbd>R</kbd>: Revert configuration in Control Menu</p>
+    <p><kbd>Space</kbd>: Pause/Resume globally</p>
+
+    <h1>Camera Control</h1>
+    <p>1. <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd>, <kbd>&#8592;</kbd>, <kbd>&#8594;</kbd>: Aim camera in any direction without changing its position</p>
+    <p>2. <kbd>W</kbd>, <kbd>S</kbd>, <kbd>A</kbd>, <kbd>D</kbd>: Move forward/backward in the gaze direction and strafe sideways left/right</p>
+    <p>3. <kbd>I</kbd>, <kbd>K</kbd>, <kbd>J</kbd>, <kbd>L</kbd>: Move along X/Z axis</p>
 
     <h1>Mouse Control</h1>
-    <p>Move: The Ender Dragon will follow the mouse. It will start to move randomly after reach the mouse</p>
-    <p>Drag & Move: Rotate the Clover</p>
+    <p>Drag & Move: Rotate the Icosahedron</p>
 
     <script src="lib/webgl-utils.js"></script>
     <script src="lib/webgl-debug.js"></script>
