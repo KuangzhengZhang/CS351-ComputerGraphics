@@ -1,7 +1,8 @@
 let Config = function () {
     this.Env = {
-        Pause: true,
-        bgClr: [0, 191, 255, 1],
+        Pause: false,
+        // bgClr: [152, 245, 255, 1],
+        bgClr: [255, 228, 196, 1],
         // bgClr: [0, 0, 0, 1],
 
         Width: 1300,
@@ -901,7 +902,7 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     //     0, 0, 1);	// View UP vector.
 
     pushMatrix(modelMatrix);
-    drawAxes(modelMatrix, u_ModelMatrix, name = 'world');
+    drawAxes(modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, name = 'world');
     modelMatrix = popMatrix();
 
     // EnderDragon
@@ -913,7 +914,7 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
 
     pushMatrix(modelMatrix);
-    drawAxes(modelMatrix, u_ModelMatrix);
+    drawAxes(modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
     modelMatrix = popMatrix();
 
     // Fin
@@ -963,7 +964,10 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
 
     pushMatrix(modelMatrix);
-    drawAxes(modelMatrix, u_ModelMatrix);
+    pushMatrix(colorMatrix);
+    colorMatrix.setIdentity();
+    drawAxes(modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+    colorMatrix = popMatrix();
     modelMatrix = popMatrix();
 
     for (let i = 1; i <= config.Clover.Petal.Num; i++) {
@@ -983,7 +987,10 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     drawIcosahedron(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, quatMatrix);
 
     pushMatrix(modelMatrix);
-    drawAxes(modelMatrix, u_ModelMatrix, name = 'Icosahedron');
+    pushMatrix(colorMatrix);
+    colorMatrix.setIdentity();
+    drawAxes(modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, name = 'Icosahedron');
+    colorMatrix = popMatrix();
     modelMatrix = popMatrix();
 
     modelMatrix = popMatrix();
@@ -992,7 +999,7 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     colorMatrix.setIdentity();
     modelMatrix = popMatrix();
     pushMatrix(modelMatrix);
-    drawGroundGrid(interval, modelMatrix, u_ModelMatrix);
+    drawGroundGrid(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
     modelMatrix = popMatrix();
 }
 
@@ -1222,8 +1229,10 @@ function defGroundGrid() {
     let xymax = 50.0;			// grid size; extends to cover +/-xymax in x and y.
     // let xColr = new Float32Array([1.0, 1.0, 0.3]);	// bright yellow
     // let yColr = new Float32Array([0.5, 1.0, 0.5]);	// bright green.
-    let xColr = new Float32Array([1.0, 0.0, 0.0]);	// red
-    let yColr = new Float32Array([0.0, 1.0, 0.0]);	// green.
+    // let xColr = new Float32Array([1.0, 0.0, 0.0]);	// red
+    // let yColr = new Float32Array([0.0, 1.0, 0.0]);	// green.
+    let xColr = new Float32Array([1.0, 1.0, 0.0]);	// red
+    let yColr = new Float32Array([1.0, 0.843, 0.0]);	// green.
 
     // Create an (global) array to hold this ground-plane's vertices:
     GroundGrid_Vertices = new Float32Array(floatsPerVertex * 2 * (xcount + ycount));
@@ -1273,11 +1282,13 @@ function defGroundGrid() {
     updateInfo('Env', 'GroundGrid', GroundGrid_Vertices);
 }
 
-function drawGroundGrid(interval, modelMatrix, u_ModelMatrix) {
+function drawGroundGrid(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
     modelMatrix.rotate(-90, 1, 0, 0);
     // modelMatrix.translate(0.0, 0.0, -0.6);
     modelMatrix.scale(0.4, 0.4, 0.4);
+    colorMatrix.setIdentity();
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
     gl.drawArrays(gl.LINES, Info.Env.GroundGrid.position, Info.Env.GroundGrid.n);
 }
 

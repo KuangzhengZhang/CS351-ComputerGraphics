@@ -570,20 +570,20 @@ function drawEnderDragonHead(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
 
 function defAxes() {
     let Axes_Vertices = new Float32Array([
-        0.0, 0.0, 0.0, 1.0, 0.3, 0.3, 0.3,	// X axis line (origin: gray)
-        1.3, 0.0, 0.0, 1.0, 1.0, 0.3, 0.3,	// 						 (endpoint: red)
+        0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0,	// X axis line (origin: gray)
+        1.3, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0,	// 						 (endpoint: red)
 
-        0.0, 0.0, 0.0, 1.0, 0.3, 0.3, 0.3,	// Y axis line (origin: white)
-        0.0, 1.3, 0.0, 1.0, 0.3, 1.0, 0.3,	//						 (endpoint: green)
+        0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0,	// Y axis line (origin: white)
+        0.0, 1.3, 0.0, 1.0, 0.0, 1.0, 0.0,	//						 (endpoint: green)
 
-        0.0, 0.0, 0.0, 1.0, 0.3, 0.3, 0.3,	// Z axis line (origin:white)
-        0.0, 0.0, 1.3, 1.0, 0.3, 0.3, 1.0,	//						 (endpoint: blue)
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,	// Z axis line (origin:white)
+        0.0, 0.0, 1.3, 1.0, 0.0, 0.0, 1.0,	//						 (endpoint: blue)
     ])
 
     updateInfo('EnderDragon', 'Axes', Axes_Vertices);
 }
 
-function drawAxes(modelMatrix, u_ModelMatrix, name) {
+function drawAxes(modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, name) {
     if (name === 'Icosahedron') {
         modelMatrix.scale(2, 2, 2);
     } else if (name === 'world') {
@@ -594,5 +594,6 @@ function drawAxes(modelMatrix, u_ModelMatrix, name) {
         modelMatrix.rotate(-90, 1, 0, 0);
     }
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
     gl.drawArrays(gl.LINES, Info.EnderDragon.Axes.position, Info.EnderDragon.Axes.n);
 }

@@ -93,7 +93,7 @@ In the initial state, Torus, Ender Dragon and Clover are paused (`config.Env.Pau
 
 *Figure 6: Attach Camera to Clover Stamen*
 
-Enable `Control Menu`-`Camera`-`Attach` to attach the camera to the Clover Stamen. Choose `Look From Front` in `Control Menu`-`Camera`-`Preset Cameras` to get a better view. The camera will rotate as the Clover rotate. 
+Enable `Control Menu`-`Camera`-`Attach` to attach the camera to the Clover Stamen. Choose `Look From Front` in `Control Menu`-`Camera`-`Preset Cameras` to get a better view. The camera will rotate as the Clover rotate.
 
 
 
@@ -117,8 +117,16 @@ The user can choose several Preset Cameras in `Control Menu`-`Camera`-`Preset Ca
 
 *Figure 9: User Adjustable Camera Parameters & Keyboard Control & No distortion when resizing the window*
 
-**User Adjustable Camera Parameters**: The user can customize camera parameters when enabling `Control Menu`-`Camera`-`Customize Camara Parameters`-`Customize`. `fov` will be ignored in this function because the user will adjust `left`, `right`, `bottom`, `top`, `near`, `far`. Other parameters except `near` and `far` will be modified automatically to prevent distortion.
+**User Adjustable Camera Parameters**: The user can customize camera parameters when enabling `Control Menu`-`Camera`-`Customize Camara Parameters`-`Customize`. `fov` will be ignored in this function because the user will adjust `left`, `right`, `bottom`, `top`, `near`, `far`. Other parameters except `near` and `far` will be modified automatically when customizing one parameter to prevent distortion.
 
 **Keyboard Control**: Please see Instruction Section
 
 **No distortion when resizing the window**: The content will never squash/stretch as the user re-size window for taller or wider images of any size. And will never invoke browser horizontal slider-bar (vertical slider-bar will appear because user instruction in web page is a bit long).
+
+
+
+### Scene Graph
+
+![](./imgs/Scene Graph.drawio.svg)
+
+*Figure 10: Scene Graph*
