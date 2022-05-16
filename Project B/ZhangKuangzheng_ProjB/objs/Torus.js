@@ -81,7 +81,7 @@ function defTorus() {
 }
 
 function drawTorus(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
-    modelMatrix.translate(-2, 0, -2);
+    modelMatrix.translate(-2, 0.5, -2);
     modelMatrix.scale(config.Torus.Size, config.Torus.Size, config.Torus.Size);
     rotate(interval, 'Torus', 'Body', reciprocate = false);
     modelMatrix.rotate(config.Torus.Body.angle, 0, 1, 1);

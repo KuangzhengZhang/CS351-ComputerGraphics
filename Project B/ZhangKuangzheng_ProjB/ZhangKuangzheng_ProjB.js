@@ -9,12 +9,12 @@ let Config = function () {
     }
 
     this.Camera = {
-        Attach: true,
+        Attach: false,
         NavigationMode: {
             active: false,
             rotSpeed: 30
         },
-        PresetDir: {
+        PresetPos: {
             Default: 'yz45',
             yz45: () => {
                 camera = {
@@ -68,7 +68,7 @@ let Config = function () {
                 camera = {
                     x: 0,
                     y: 2,
-                    z: 0,
+                    z: 0.5,
                     fov: 35,
                     speed: 0.1
                 }
@@ -84,7 +84,7 @@ let Config = function () {
                 camera = {
                     x: 5,
                     y: 2,
-                    z: 0,
+                    z: 0.5,
                     fov: 35,
                     speed: 0.1
                 }
@@ -97,13 +97,20 @@ let Config = function () {
                 }
             }
         },
-        Ortho: {
+        Parameters: {
             Customize: false,
             fov: 35,
-            left: -1.2699883488312842,
-            right: 1.2699883488312842,
-            bottom: -1.261195155515934,
-            top: 1.261195155515934,
+
+            left: -0.49938833332929145,
+            right: 0.49938833332929145,
+            bottom: -0.3152987888789835,
+            top: 0.3152987888789835,
+
+            // left: -0.18442004632544318,
+            // right: 0.18442004632544318,
+            // bottom: -0.10786832898280638,
+            // top: 0.10786832898280638,
+
             near: 1,
             far: 20
         }
@@ -292,11 +299,12 @@ let projMatrix = new Matrix4();
 let modelMatrix = new Matrix4();
 let quatMatrix = new Matrix4();
 let colorMatrix = new Matrix4();
+let cameraMatrix = new Matrix4();
 
 // lookAt Function
 // eye
 let camera, at;
-eval('config.Camera.PresetDir.' + config.Camera.PresetDir.Default + '();')
+eval('config.Camera.PresetPos.' + config.Camera.PresetPos.Default + '();')
 
 let up = {
     x: 0,
@@ -335,8 +343,8 @@ let EnderDragonPos = {
     z: null
 };
 let CloverPos = {
-    x: null,
-    y: null,
+    x: 0,
+    y: 0,
     z: 2
 };
 
@@ -488,29 +496,41 @@ function initCfg() {
 
     // Camera
     let Camera = gui.addFolder('Camera');
-    // Camera.add(config.Camera, 'Attach');
+    Camera.add(config.Camera, 'Attach');
 
     let NavigationMode = Camera.addFolder('Flying-Airplane Navigation Mode');
     NavigationMode.add(config.Camera.NavigationMode, 'active').listen();
     NavigationMode.add(config.Camera.NavigationMode, 'rotSpeed', 1, 60).listen();
 
 
-    let PresetCameraDir = Camera.addFolder('Preset Camera');
-    PresetCameraDir.add(config.Camera.PresetDir, 'yz45').name('Look From Y-Z 45 Degree');
-    PresetCameraDir.add(config.Camera.PresetDir, 'up').name('Look From Up');
-    PresetCameraDir.add(config.Camera.PresetDir, 'front').name('Look From Front');
-    PresetCameraDir.add(config.Camera.PresetDir, 'left').name('Look From Left');
-    PresetCameraDir.add(config.Camera.PresetDir, 'right').name('Look From Right');
+    let PresetCameraDir = Camera.addFolder('Preset Cameras');
+    PresetCameraDir.add(config.Camera.PresetPos, 'yz45').name('Look From Y-Z 45 Degree');
+    PresetCameraDir.add(config.Camera.PresetPos, 'up').name('Look From Up');
+    PresetCameraDir.add(config.Camera.PresetPos, 'front').name('Look From Front');
+    PresetCameraDir.add(config.Camera.PresetPos, 'left').name('Look From Left');
+    PresetCameraDir.add(config.Camera.PresetPos, 'right').name('Look From Right');
 
-    let CustomeOrthoPara = Camera.addFolder('Customize Ortho Camera Parameters');
-    CustomeOrthoPara.add(config.Camera.Ortho, 'Customize').listen();
-    CustomeOrthoPara.add(config.Camera.Ortho, 'fov', 10, 40).listen();
-    CustomeOrthoPara.add(config.Camera.Ortho, 'left', -5, 0).listen();
-    CustomeOrthoPara.add(config.Camera.Ortho, 'right', 0, 5).listen();
-    CustomeOrthoPara.add(config.Camera.Ortho, 'bottom', -5, 0).listen();
-    CustomeOrthoPara.add(config.Camera.Ortho, 'top', 0, 5).listen();
-    CustomeOrthoPara.add(config.Camera.Ortho, 'near', 0, 1).listen();
-    CustomeOrthoPara.add(config.Camera.Ortho, 'far', 1, 100).listen();
+    let CustomeCameraPara = Camera.addFolder('Customize Camera Parameters');
+    CustomeCameraPara.add(config.Camera.Parameters, 'Customize').listen();
+    CustomeCameraPara.add(config.Camera.Parameters, 'fov', 10, 40).listen();
+    CustomeCameraPara.add(config.Camera.Parameters, 'left', -3, 0).listen().onChange(() => {
+        config.Camera.Parameters.right = - config.Camera.Parameters.left;
+        updateCameraPara(changePara = 'left');
+    });
+    CustomeCameraPara.add(config.Camera.Parameters, 'right', 0, 3).listen().onChange(() => {
+        config.Camera.Parameters.left = - config.Camera.Parameters.right;
+        updateCameraPara(changePara = 'right');
+    });
+    CustomeCameraPara.add(config.Camera.Parameters, 'bottom', -3, 0).listen().onChange(() => {
+        config.Camera.Parameters.top = - config.Camera.Parameters.bottom;
+        updateCameraPara(changePara = 'bottom');
+    });
+    CustomeCameraPara.add(config.Camera.Parameters, 'top', 0, 3).listen().onChange(() => {
+        config.Camera.Parameters.bottom = - config.Camera.Parameters.top;
+        updateCameraPara(changePara = 'top');
+    });
+    CustomeCameraPara.add(config.Camera.Parameters, 'near', 0, 1).listen();
+    CustomeCameraPara.add(config.Camera.Parameters, 'far', 10, 100).listen();
 
     // EnderDragon
     let EnderDragon = gui.addFolder('EnderDragon');
@@ -862,7 +882,7 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     if (!config.Env.Pause && !hasTarget) {
         // console.debug(`Update Target!`);
         targetPos.x = 2 * Math.random() - 1;
-        targetPos.y = 2 * Math.random() - 1;
+        targetPos.y = 2 * Math.random();
         hasTarget = true;
     }
     colorMatrix.setIdentity();
@@ -879,6 +899,10 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     // modelMatrix.lookAt(5, 5, 3,    // center of projection
     //     0, 0, 0,	// look-at point 
     //     0, 0, 1);	// View UP vector.
+
+    pushMatrix(modelMatrix);
+    drawAxes(modelMatrix, u_ModelMatrix, name = 'world');
+    modelMatrix = popMatrix();
 
     // EnderDragon
     pushMatrix(modelMatrix);
@@ -929,6 +953,13 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     for (let i = 1; i <= config.Clover.Stem.Num; i++) {
         drawCloverStem(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx = i);
     }
+
+    pushMatrix(modelMatrix);
+    attachCamera(modelMatrix, u_ModelMatrix);
+    updateAt();
+    // cameraMatrix = modelMatrix;
+    modelMatrix = popMatrix();
+
     drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
 
     pushMatrix(modelMatrix);
@@ -1131,7 +1162,12 @@ async function main() {
         let now = Date.now();
         interval = now - g_last;
         g_last = now;
-        updateCamera(interval);
+        updateNavCamera(interval);
+
+        // pushMatrix(cameraMatrix);
+        // attachCamera(cameraMatrix);
+        // cameraMatrix = popMatrix();
+
         // draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
         drawResize(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
         requestAnimationFrame(tick, canvas);
@@ -1246,15 +1282,44 @@ function drawGroundGrid(interval, modelMatrix, u_ModelMatrix) {
 }
 
 function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
+    let bottom, top, left, right, near, far;
+
     updateAt();
     gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     let ratio = (canvas.width / 2) / canvas.height;
 
     // 1 Perspective Camera
+    if (!config.Camera.Parameters.Customize) {
+        bottom = - Math.tan(config.Camera.Parameters.fov * Math.PI / 360) * z.near;
+        top = - bottom;
+
+        left = - ratio * top;
+        right = - left;
+
+        near = z.near;
+        far = z.far;
+    } else {
+        top = config.Camera.Parameters.top;
+        bottom = - top;
+
+        left = config.Camera.Parameters.left;
+        right = config.Camera.Parameters.right;
+
+        near = config.Camera.Parameters.near;
+        far = config.Camera.Parameters.far;
+    }
+
     modelMatrix.setIdentity();
     projMatrix.setIdentity();
-    projMatrix.setPerspective(config.Camera.Ortho.fov, ratio, config.Camera.Ortho.near, config.Camera.Ortho.far);
+    // projMatrix.setPerspective(config.Camera.Parameters.fov, ratio, config.Camera.Parameters.near, config.Camera.Parameters.far);
+
+    // projMatrix.setFrustum(left, right,
+    //     bottom, top,
+    //     near, far);
+
+    projMatrix.setFrustum(left, right, bottom, top, near, far);
+
     gl.viewport(0,
         0,
         canvas.width / 2,
@@ -1269,9 +1334,9 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
 
     // 2 Orthographic Camera
-    let bottom, top, left, right, near, far;
-    if (!config.Camera.Ortho.Customize) {
-        bottom = - Math.tan(config.Camera.Ortho.fov * Math.PI / 360) * (z.near + (z.far - z.near) / 3);
+    let fov;
+    if (!config.Camera.Parameters.Customize) {
+        bottom = - Math.tan(config.Camera.Parameters.fov * Math.PI / 360) * (z.near + (z.far - z.near) / 3);
         top = - bottom;
 
         left = - ratio * top;
@@ -1280,17 +1345,17 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
         near = z.near;
         far = z.far;
     } else {
-        bottom = config.Camera.Ortho.bottom;
-        top = config.Camera.Ortho.top;
+        half_fov = Math.atan(config.Camera.Parameters.top / config.Camera.Parameters.near);
 
-        left = config.Camera.Ortho.left;
-        right = config.Camera.Ortho.right;
+        bottom = - Math.tan(half_fov) * (config.Camera.Parameters.near + (config.Camera.Parameters.far - config.Camera.Parameters.near) / 3);
 
-        // left = - ratio * top;
-        // right = - left;
+        top = - bottom;
 
-        near = config.Camera.Ortho.near;
-        far = config.Camera.Ortho.far;
+        left = - ratio * top;
+        right = - left;
+
+        near = config.Camera.Parameters.near;
+        far = config.Camera.Parameters.far;
     }
 
     modelMatrix.setIdentity();
@@ -1328,6 +1393,7 @@ function drawResize() {
     canvas.width = innerWidth - xtraMargin;
     canvas.height = (innerHeight * 2 / 3) - xtraMargin;
     // IMPORTANT!  Need a fresh drawing in the re-sized viewports.
+    updateCameraPara(changePara = 'left');
     draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);				// draw in all viewports.
 }
 
@@ -1381,12 +1447,61 @@ function showInfo() {
     document.getElementById('at').innerHTML = `at Position: (${at.x}, ${at.y}, ${at.z})`;
 }
 
-function updateCamera(interval) {
+function updateNavCamera(interval) {
     if (config.Camera.NavigationMode.active) {
         let distance = Math.sqrt(Math.pow(camera.x, 2) + Math.pow(camera.y, 2));
         at.horizontalAngle += interval * config.Camera.NavigationMode.rotSpeed / 1000.0;
         at.horizontalAngle %= 360;
         camera.x = -distance * Math.cos(at.horizontalAngle * Math.PI / 180);
         camera.y = -distance * Math.sin(at.horizontalAngle * Math.PI / 180);
+    }
+}
+
+function attachCamera(modelMatrix, u_ModelMatrix) {
+    if (config.Camera.Attach) {
+        // let initPos = {
+        //     x: CloverPos.x,
+        //     y: CloverPos.y,
+        //     z: CloverPos.z,
+        // }
+        // let initVector4 = new Vector4([initPos.x, initPos.y, initPos.z, 1]);
+        // let initVector4 = new Vector4([0, 0, 0, 1]);
+        // modelMatrix.rotate(-90, 1, 0, 0);
+        // modelMatrix.printMe()
+        modelMatrix.translate(0, config.Clover.Stem.L, 0);
+        // let targetVector4 = modelMatrix.multiplyVector4(initVector4);
+        // targetVector4.printMe()
+        // console.log(targetVector4)
+        // camera.x = targetVector4.elements[0];
+
+        // camera.y = targetVector4.elements[1];
+        // camera.z = targetVector4.elements[1];
+
+        // camera.z = targetVector4.elements[2];
+        // camera.y = -targetVector4.elements[2];
+        // console.log(modelMatrix.elements[12], modelMatrix.elements[13], modelMatrix.elements[14])
+
+        camera.x = modelMatrix.elements[12];
+        camera.z = modelMatrix.elements[13];
+        camera.z = 0.48;
+        camera.y = -2;
+        // camera.y = modelMatrix.elements[14];
+    }
+}
+
+function updateCameraPara(changePara) {
+    let ratio = (canvas.width / 2) / canvas.height;
+    if (changePara === 'left') {
+        config.Camera.Parameters.bottom = config.Camera.Parameters.left / ratio;
+        config.Camera.Parameters.top = - config.Camera.Parameters.bottom;
+    } else if (changePara === 'right') {
+        config.Camera.Parameters.top = config.Camera.Parameters.right / ratio;
+        config.Camera.Parameters.bottom = - config.Camera.Parameters.top;
+    } else if (changePara === 'bottom') {
+        config.Camera.Parameters.left = config.Camera.Parameters.bottom * ratio;
+        config.Camera.Parameters.right = - config.Camera.Parameters.left;
+    } else if (changePara === 'top') {
+        config.Camera.Parameters.right = config.Camera.Parameters.top * ratio;
+        config.Camera.Parameters.left = - config.Camera.Parameters.right;
     }
 }

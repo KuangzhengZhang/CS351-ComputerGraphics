@@ -92,7 +92,7 @@ function defIcosahedron() {
 function drawIcosahedron(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, quatMatrix) {
     modelMatrix.rotate(-90, 1, 0, 0);
     // modelMatrix.translate(2, 0, -2);
-    modelMatrix.translate(2, 2, 0);
+    modelMatrix.translate(2, 2, 0.5);
     modelMatrix.scale(config.Icosahedron.Size, config.Icosahedron.Size, config.Icosahedron.Size);
     // rotate(interval, 'Icosahedron', 'Body', reciprocate = false);
     // modelMatrix.rotate(config.Icosahedron.Body.angle, 0, 1, 1);

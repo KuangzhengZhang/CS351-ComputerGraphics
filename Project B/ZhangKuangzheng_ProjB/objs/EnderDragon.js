@@ -586,6 +586,9 @@ function defAxes() {
 function drawAxes(modelMatrix, u_ModelMatrix, name) {
     if (name === 'Icosahedron') {
         modelMatrix.scale(2, 2, 2);
+    } else if (name === 'world') {
+        modelMatrix.scale(10, 10, 10);
+        modelMatrix.rotate(-90, 1, 0, 0);
     } else {
         modelMatrix.scale(0.5, 0.5, 0.5);
         modelMatrix.rotate(-90, 1, 0, 0);
