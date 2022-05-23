@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* From https://developer.mozilla.org/en-US/docs/Web/HTML/Element/kbd */
+        kbd {
+            background-color: #eee;
+            border-radius: 3px;
+            border: 1px solid #b4b4b4;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2),
+                0 2px 0 0 rgba(255, 255, 255, 0.7) inset;
+            color: #333;
+            display: inline-block;
+            font-size: 0.85em;
+            font-weight: 700;
+            line-height: 1;
+            padding: 2px 4px;
+            white-space: nowrap;
+        }
+    </style>
+    <title>ZhangKuangzheng_ProjB</title>
+</head>
+
+<body onload="main()" onresize="drawResize()">
+    <canvas id="webgl" width="0" height="0">
+        Please use a browser that supports "canvas"
+    </canvas>
+
+    <div id="mousePos"></div>
+    <div id="EnderDragonPos"></div>
+    <div id="camera"></div>
+    <div id="at"></div>
+
+    <h1>Keyboard Control</h1>
+    <p><kbd>/</kbd>: Toggle Control Menu</p>
+    <p><kbd>R</kbd>: Revert configuration in Control Menu</p>
+    <p><kbd>Space</kbd>: Pause/Resume globally</p>
+
+    <h1>Camera Control</h1>
+    <p>1. <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd>, <kbd>&#8592;</kbd>, <kbd>&#8594;</kbd>: Aim camera in any direction without changing its position</p>
+    <p>2. <kbd>W</kbd>, <kbd>S</kbd>, <kbd>A</kbd>, <kbd>D</kbd>: Move forward/backward in the gaze direction and strafe sideways left/right</p>
+    <p>3. <kbd>I</kbd>, <kbd>K</kbd>, <kbd>J</kbd>, <kbd>L</kbd>: Move along X/Z axis</p>
+
+    <h1>Mouse Control</h1>
+    <p>Drag & Move: Rotate the Icosahedron</p>
+
+    <h1>Instructions</h1>
+    <p>1. Enable "Control Menu"-"Camera"-"Attach" to attach the camera to the Clover Stamen. Choose "Look From Front" in "Control Menu"-"Camera"-"Preset Cameras" to get a better view. The camera will rotate as the Clover rotate. </p>
+    <p>2. Enable Flying-Airplane Navigation Mode by enabling "Control Menu"-"Camera"-"Flying-Airplane Navigation Mode"-"active". The camera will rotate around Z-axis automatically and continuously. Change "rotSpeed" to accelerate/decelerate the rotation.</p>
+    <p>3. Customize camera parameters when enabling "Control Menu"-"Camera"-"Customize Camara Parameters"-"Customize". "fov" will be ignored in this function. Other parameters except "near" and "far" will be modified automatically when customizing one parameter to prevent distortion.</p>
+
+    <script src="lib/webgl-utils.js"></script>
+    <script src="lib/webgl-debug.js"></script>
+    <script src="lib/cuon-utils.js"></script>
+    <script src="lib/cuon-matrix-quat03.js"></script>
+    <script src="lib/dat.gui.min.js"></script>
+    <script src="objs/EnderDragon.js"></script>
+    <script src="objs/Clover.js"></script>
+    <script src="objs/Torus.js"></script>
+    <script src="objs/Icosahedron.js"></script>
+    <script src="ZhangKuangzheng_ProjC.js"></script>
+</body>
+
+</html>
