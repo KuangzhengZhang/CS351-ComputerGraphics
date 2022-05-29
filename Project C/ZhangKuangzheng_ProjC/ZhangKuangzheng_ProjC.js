@@ -5,8 +5,97 @@ let Config = function () {
         bgClr: [255, 228, 196, 1],
         // bgClr: [0, 0, 0, 1],
 
-        Width: 1300,
+        Width: 650,
         Height: 650
+    }
+
+    this.Location = {
+        'Blinn-Phong Lighting + Phong Shading': {
+            program: null,
+            Matrix: {
+                u_ColorMatrix: null,
+                u_eyePosWorld: null,
+                u_MvpMatrix: null,
+                u_ModelMatrix: null,
+                u_NormalMatrix: null,
+            },
+            Lamp: [new LightsT(), new LightsT()],
+            Matl: new Material(MATL_GOLD_SHINY)
+        },
+        'Blinn-Phong Lighting + Gouraud Shading': {
+            program: null,
+            Matrix: {
+                u_ColorMatrix: null,
+                u_eyePosWorld: null,
+                u_MvpMatrix: null,
+                u_ModelMatrix: null,
+                u_NormalMatrix: null,
+            },
+            Lamp: [new LightsT(), new LightsT()],
+            Matl: new Material(MATL_RED_PLASTIC)
+        },
+        'Phong Lighting + Phong Shading': {
+            program: null,
+            Matrix: {
+                u_ColorMatrix: null,
+                u_eyePosWorld: null,
+                u_MvpMatrix: null,
+                u_ModelMatrix: null,
+                u_NormalMatrix: null,
+            },
+            Lamp: [new LightsT(), new LightsT()],
+            Matl: new Material(MATL_RED_PLASTIC)
+        },
+        'Phong Lighting + Gouraud Shading': {
+            program: null,
+            Matrix: {
+                u_ColorMatrix: null,
+                u_eyePosWorld: null,
+                u_MvpMatrix: null,
+                u_ModelMatrix: null,
+                u_NormalMatrix: null,
+            },
+            Lamp: [new LightsT(), new LightsT()],
+            Matl: new Material(MATL_RED_PLASTIC)
+        }
+
+    }
+
+    this.Lighting = {
+        Type: 'Blinn-Phong Lighting'
+    }
+
+    this.Shading = {
+        Type: 'Phong Shading'
+    }
+
+    this.Light = {
+        'left': {
+            Color: [0.8, 0.8, 0.8],
+            Position: {
+                x: -2.0,
+                y: -2.0,
+                z: 2.0
+            },
+            Ambient: [102, 102, 102],
+            Diffuse: [255, 255, 255],
+            Specular: [255, 255, 255],
+            isLitBool: true,
+            isLit: 1
+        },
+        'right': {
+            Color: [0.8, 0.8, 0.8],
+            Position: {
+                x: 2.0,
+                y: -2.0,
+                z: 2.0
+            },
+            Ambient: [102, 102, 102],
+            Diffuse: [255, 255, 255],
+            Specular: [255, 255, 255],
+            isLitBool: true,
+            isLit: 1
+        }
     }
 
     this.Camera = {
@@ -16,13 +105,13 @@ let Config = function () {
             rotSpeed: 30
         },
         PresetPos: {
-            Default: 'yz45',
+            Default: 'front',
             yz45: () => {
                 camera = {
                     x: 0,
                     y: -5,
                     z: 5,
-                    fov: 35,
+                    fov: 30,
                     speed: 0.1
                 }
                 at = {
@@ -38,7 +127,7 @@ let Config = function () {
                     x: 0,
                     y: 0,
                     z: 10,
-                    fov: 35,
+                    fov: 30,
                     speed: 0.1
                 }
                 at = {
@@ -50,11 +139,25 @@ let Config = function () {
                 }
             },
             front: () => {
+                // camera = {
+                //     x: -2,
+                //     y: -5,
+                //     z: 1,
+                //     fov: 30,
+                //     speed: 0.1
+                // }
+                // at = {
+                //     x: -2,
+                //     y: 2,
+                //     z: 1,
+                //     vertivalAngle: 90,
+                //     horizontalAngle: 90
+                // }
                 camera = {
                     x: 0,
                     y: -5,
                     z: 0,
-                    fov: 35,
+                    fov: 30,
                     speed: 0.1
                 }
                 at = {
@@ -70,7 +173,7 @@ let Config = function () {
                     x: 0,
                     y: 2,
                     z: 0.5,
-                    fov: 35,
+                    fov: 30,
                     speed: 0.1
                 }
                 at = {
@@ -86,7 +189,7 @@ let Config = function () {
                     x: 5,
                     y: 2,
                     z: 0.5,
-                    fov: 35,
+                    fov: 30,
                     speed: 0.1
                 }
                 at = {
@@ -100,7 +203,7 @@ let Config = function () {
         },
         Parameters: {
             Customize: false,
-            fov: 35,
+            fov: 30,
 
             left: -0.49938833332929145,
             right: 0.49938833332929145,
@@ -114,6 +217,19 @@ let Config = function () {
 
             near: 1,
             far: 20
+        }
+    }
+
+    this.Sphere = {
+        Pause: false,
+        Size: 0.3,
+        Body: {
+            Pause: false,
+            rotSpeed: 45,
+            rotMaxAngle: 180,
+            rotMinAngle: -180,
+
+            angle: 0
         }
     }
 
@@ -296,11 +412,18 @@ const floatsPerVertex = 7;
 let gl, canvas, gui, interval;
 let config = new Config();
 
-let projMatrix = new Matrix4();
+let mvpMatrix = new Matrix4();
 let modelMatrix = new Matrix4();
 let quatMatrix = new Matrix4();
 let colorMatrix = new Matrix4();
-let cameraMatrix = new Matrix4();
+let normalMatrix = new Matrix4();
+
+// Project C
+let u_eyePosWorld, u_ModelMatrix, u_MvpMatrix, u_NormalMatrix;
+let eyePosWorld = new Float32Array(3);
+let Lamp = [new LightsT(), new LightsT()];
+let matlSel = MATL_RED_PLASTIC;
+let Matl = new Material(matlSel);
 
 // lookAt Function
 // eye
@@ -319,7 +442,7 @@ let z = {
 }
 
 // Matrix
-let u_ProjMatrix, u_ModelMatrix, u_ColorMatrix;
+let u_ColorMatrix;
 
 // Position
 let targetPos = {
@@ -346,7 +469,7 @@ let EnderDragonPos = {
 let CloverPos = {
     x: 0,
     y: 0,
-    z: 2
+    z: -2
 };
 
 // Animation
@@ -358,13 +481,22 @@ let dragMode = false;
 // Random
 let hasTarget = false;
 
-let vertices;
+let vertices, indices;
 let n;
 
 let Info = {
     Env: {
         GroundGrid: {
             vertices: null,
+            n: null,
+            position: null
+        },
+        n: null
+    },
+    Sphere: {
+        Body: {
+            vertices: null,
+            // indices: null,
             n: null,
             position: null
         },
@@ -461,14 +593,14 @@ document.onkeydown = keyDown;
 document.onkeyup = keyUp;
 // document.onkeypress = keyPress;
 
-var VSHADER_SOURCE =
+/* var VSHADER_SOURCE =
     'attribute vec4 a_Position;\n' +
     'attribute vec4 a_Color;\n' +
-    'uniform mat4 u_ProjMatrix;\n' +
+    'uniform mat4 u_MvpMatrix;\n' +
     'uniform mat4 u_ModelMatrix;\n' +
     'varying vec4 v_Color;\n' +
     'void main() {\n' +
-    '   gl_Position = u_ProjMatrix * u_ModelMatrix * a_Position;\n' +
+    '   gl_Position = u_MvpMatrix * u_ModelMatrix * a_Position;\n' +
     '   gl_PointSize = 10.0;\n' +
     '   v_Color = a_Color;\n' +
     '}\n';
@@ -479,11 +611,11 @@ var FSHADER_SOURCE =
     'varying vec4 v_Color;\n' +
     'void main() {\n' +
     '  gl_FragColor = u_ColorMatrix * v_Color;\n' +
-    '}\n';
+    '}\n'; */
 
 function initCfg() {
     gui = new dat.GUI({ name: 'GUI' });
-    gui.width = 270;
+    gui.width = 300;
     gui.remember(config);
     gui.closed = true;
 
@@ -494,6 +626,44 @@ function initCfg() {
     // Env.add(config.Env, 'Width', 0, 1000).listen();
     // Env.add(config.Env, 'Height', 0, 1000).listen();
     // Env.open();
+
+    // Lighting
+    let Lighting = gui.addFolder('Lighting');
+    Lighting.add(config.Lighting, 'Type', ['Phong Lighting', 'Blinn-Phong Lighting', 'Cook-Torrance Lighting']).listen().onChange(() => {
+        console.log(config.Lighting.Type);
+    });
+
+    // Shading
+    let Shading = gui.addFolder('Shading');
+    Shading.add(config.Shading, 'Type', ['Gouraud Shading', 'Phong Shading']).listen().onChange(() => {
+        console.log(config.Shading.Type);
+    });
+
+    // Light
+    let Light = gui.addFolder('Light');
+    // LeftLight
+    let LeftLight = Light.addFolder('Left Light');
+    LeftLight.add(config.Light['left'], 'isLitBool').name('isLit').listen().onChange(() => {
+        config.Light['left'].isLit = config.Light['left'].isLitBool === true ? 1 : 0;
+    });
+    LeftLight.add(config.Light['left'].Position, 'x', -10, 10).listen();
+    LeftLight.add(config.Light['left'].Position, 'y', -10, 10).listen();
+    LeftLight.add(config.Light['left'].Position, 'z', -10, 10).listen();
+    LeftLight.addColor(config.Light['left'], 'Ambient').listen();
+    LeftLight.addColor(config.Light['left'], 'Diffuse').listen();
+    LeftLight.addColor(config.Light['left'], 'Specular').listen();
+
+    // RightLight
+    let RightLight = Light.addFolder('Right Light');
+    RightLight.add(config.Light['right'], 'isLitBool').name('isLit').listen().onChange(() => {
+        config.Light['right'].isLit = config.Light['right'].isLitBool === true ? 1 : 0;
+    });
+    RightLight.add(config.Light['right'].Position, 'x', -10, 10).listen();
+    RightLight.add(config.Light['right'].Position, 'y', -10, 10).listen();
+    RightLight.add(config.Light['right'].Position, 'z', -10, 10).listen();
+    RightLight.addColor(config.Light['right'], 'Ambient').listen();
+    RightLight.addColor(config.Light['right'], 'Diffuse').listen();
+    RightLight.addColor(config.Light['right'], 'Specular').listen();
 
     // Camera
     let Camera = gui.addFolder('Camera');
@@ -806,6 +976,9 @@ function initVertexBuffer() {
     defGroundGrid();
     defAxes();
 
+    // Sphere
+    defSphere();
+
     // Torus
     defTorus();
 
@@ -827,6 +1000,7 @@ function initVertexBuffer() {
 
     console.log(Info)
     n = Info.n;
+    // vertices = new Float32Array(n * floatsPerVertex + Sphere_Vertices.length);
     vertices = new Float32Array(n * floatsPerVertex);
     for (const [k1, v1] of Object.entries(Info)) {
         if (k1 != n) {
@@ -839,13 +1013,22 @@ function initVertexBuffer() {
             }
         }
     }
+
+    // for (let i = 0; i < Sphere_Vertices.length; i++) {
+    //     vertices[n * floatsPerVertex + i] = Sphere_Vertices[i];
+    // }
+    // for (let i = 0; i < Sphere_Indices.length; i++) {
+    //     Sphere_Indices[i] += n * floatsPerVertex;
+    // }
+    // indices = Sphere_Indices;
     console.log(vertices);
+
     // vertices = Cube;
     // n = parseInt(vertices.length / 7);
     // console.log(n);
 
     // vertexBuffer
-    var vertexBuffer = gl.createBuffer();
+    let vertexBuffer = gl.createBuffer();
     if (!vertexBuffer) {
         console.log('Failed to create the buffer object');
         return false;
@@ -855,18 +1038,19 @@ function initVertexBuffer() {
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     // Write date into the buffer object
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-    var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+    let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+    let a_Normal = gl.getAttribLocation(gl.program, 'a_Normal');
     if (a_Position < 0) {
         console.log('Failed to get the storage location of a_Position');
         return -1;
     }
-    // Assign the buffer object to a_Position variable
     gl.vertexAttribPointer(a_Position, 4, gl.FLOAT, false, FSIZE * 7, 0);
-    // Enable the assignment to a_Position variable
     gl.enableVertexAttribArray(a_Position);
+    gl.vertexAttribPointer(a_Normal, 4, gl.FLOAT, false, FSIZE * 7, 0);
+    gl.enableVertexAttribArray(a_Normal);
 
     // Color
-    var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+    let a_Color = gl.getAttribLocation(gl.program, 'a_Color');
     if (a_Color < 0) {
         console.log('Failed to get the storage location of a_Color');
         return -1;
@@ -876,10 +1060,21 @@ function initVertexBuffer() {
     // Enable the assignment to a_Color variable
     gl.enableVertexAttribArray(a_Color);
 
+
+    // // indiceBuffer
+    // // gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    // let indiceBuffer = gl.createBuffer();
+    // console.log(indices)
+    // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indiceBuffer);
+    // // Write date into the buffer object
+    // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+    // gl.vertexAttribPointer(a_Position + 7, 3, gl.FLOAT, false, 0, 0);
+    // gl.enableVertexAttribArray(a_Position + n * floatsPerVertex);
+
     return Info.n;
 }
 
-function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
+function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix) {
     if (!config.Env.Pause && !hasTarget) {
         // console.debug(`Update Target!`);
         targetPos.x = 2 * Math.random() - 1;
@@ -903,6 +1098,10 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
 
     pushMatrix(modelMatrix);
     drawAxes(modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, name = 'world');
+    modelMatrix = popMatrix();
+
+    pushMatrix(modelMatrix);
+    drawSphere(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, u_NormalMatrix);
     modelMatrix = popMatrix();
 
     // EnderDragon
@@ -958,7 +1157,6 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     pushMatrix(modelMatrix);
     attachCamera(modelMatrix, u_ModelMatrix);
     updateAt();
-    // cameraMatrix = modelMatrix;
     modelMatrix = popMatrix();
 
     drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
@@ -979,6 +1177,7 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     modelMatrix = popMatrix();
     pushMatrix(modelMatrix);
     drawTorus(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
+    // drawSphere(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, u_NormalMatrix);
     modelMatrix = popMatrix();
 
     // Icosahedron
@@ -1132,31 +1331,14 @@ async function main() {
         return;
     }
 
-    // Initialize shaders
-    if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
-        console.log('Failed to intialize shaders.');
-        return;
-    }
+    initShader(gl, mode = 'Blinn-Phong Lighting + Phong Shading');
+    initShader(gl, mode = 'Blinn-Phong Lighting + Gouraud Shading');
+    initShader(gl, mode = 'Phong Lighting + Phong Shading');
+    initShader(gl, mode = 'Phong Lighting + Gouraud Shading');
 
     n = initVertexBuffer();
     if (n < 0) {
         console.log('Failed to set the vertex information');
-        return;
-    }
-
-    u_ProjMatrix = gl.getUniformLocation(gl.program, 'u_ProjMatrix');
-    if (!u_ProjMatrix) {
-        console.log('Failed to get the storage location of u_ProjMatrix');
-        return;
-    }
-    u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
-    if (!u_ModelMatrix) {
-        console.log('Failed to get the storage location of u_ModelMatrix');
-        return;
-    }
-    u_ColorMatrix = gl.getUniformLocation(gl.program, 'u_ColorMatrix');
-    if (!u_ColorMatrix) {
-        console.log('Failed to get the storage location of u_ColorMatrix');
         return;
     }
 
@@ -1170,10 +1352,7 @@ async function main() {
         interval = now - g_last;
         g_last = now;
         updateNavCamera(interval);
-
-        // pushMatrix(cameraMatrix);
-        // attachCamera(cameraMatrix);
-        // cameraMatrix = popMatrix();
+        updateShader();
 
         // draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
         drawResize(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
@@ -1292,13 +1471,51 @@ function drawGroundGrid(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_Col
     gl.drawArrays(gl.LINES, Info.Env.GroundGrid.position, Info.Env.GroundGrid.n);
 }
 
-function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
+function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix) {
+    // Project C
+    eyePosWorld.set([camera.x, camera.y, camera.z]);
+    gl.uniform3fv(u_eyePosWorld, eyePosWorld);
+
+    // Left Light
+    Lamp[0].isLit = config.Light['left'].isLit;
+    Lamp[0].I_pos.elements.set([config.Light['left'].Position.x, config.Light['left'].Position.y, config.Light['left'].Position.z]);
+    Lamp[0].I_ambi.elements.set([config.Light['left'].Ambient[0] / 255., config.Light['left'].Ambient[1] / 255., config.Light['left'].Ambient[2] / 255.]);
+    Lamp[0].I_diff.elements.set([config.Light['left'].Diffuse[0] / 255., config.Light['left'].Diffuse[1] / 255., config.Light['left'].Diffuse[2] / 255.]);
+    Lamp[0].I_spec.elements.set([config.Light['left'].Specular[0] / 255., config.Light['left'].Specular[1] / 255., config.Light['left'].Specular[2] / 255.]);
+
+    gl.uniform1i(Lamp[0].u_isLit, Lamp[0].isLit);
+    gl.uniform3fv(Lamp[0].u_pos, Lamp[0].I_pos.elements.slice(0, 3));
+    gl.uniform3fv(Lamp[0].u_ambi, Lamp[0].I_ambi.elements);
+    gl.uniform3fv(Lamp[0].u_diff, Lamp[0].I_diff.elements);
+    gl.uniform3fv(Lamp[0].u_spec, Lamp[0].I_spec.elements);
+
+    // Right Light
+    Lamp[1].isLit = config.Light['right'].isLit;
+    Lamp[1].I_pos.elements.set([config.Light['right'].Position.x, config.Light['right'].Position.y, config.Light['right'].Position.z]);
+    Lamp[1].I_ambi.elements.set([config.Light['right'].Ambient[0] / 255., config.Light['right'].Ambient[1] / 255., config.Light['right'].Ambient[2] / 255.]);
+    Lamp[1].I_diff.elements.set([config.Light['right'].Diffuse[0] / 255., config.Light['right'].Diffuse[1] / 255., config.Light['right'].Diffuse[2] / 255.]);
+    Lamp[1].I_spec.elements.set([config.Light['right'].Specular[0] / 255., config.Light['right'].Specular[1] / 255., config.Light['right'].Specular[2] / 255.]);
+
+    gl.uniform1i(Lamp[1].u_isLit, Lamp[1].isLit);
+    gl.uniform3fv(Lamp[1].u_pos, Lamp[1].I_pos.elements.slice(0, 3));
+    gl.uniform3fv(Lamp[1].u_ambi, Lamp[1].I_ambi.elements);
+    gl.uniform3fv(Lamp[1].u_diff, Lamp[1].I_diff.elements);
+    gl.uniform3fv(Lamp[1].u_spec, Lamp[1].I_spec.elements);
+
+    gl.uniform3fv(Matl.uLoc_Ke, Matl.K_emit.slice(0, 3));
+    gl.uniform3fv(Matl.uLoc_Ka, Matl.K_ambi.slice(0, 3));
+    gl.uniform3fv(Matl.uLoc_Kd, Matl.K_diff.slice(0, 3));
+    gl.uniform3fv(Matl.uLoc_Ks, Matl.K_spec.slice(0, 3));
+    gl.uniform1i(Matl.uLoc_Kshiny, parseInt(Matl.K_shiny, 10));
+
+
+    // Project B
     let bottom, top, left, right, near, far;
 
     updateAt();
     gl.clearColor(config.Env.bgClr[0] / 255, config.Env.bgClr[1] / 255, config.Env.bgClr[2] / 255, config.Env.bgClr[3]);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    let ratio = (canvas.width / 2) / canvas.height;
+    let ratio = canvas.width / canvas.height;
 
     // 1 Perspective Camera
     if (!config.Camera.Parameters.Customize) {
@@ -1322,70 +1539,71 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix) {
     }
 
     modelMatrix.setIdentity();
-    projMatrix.setIdentity();
-    // projMatrix.setPerspective(config.Camera.Parameters.fov, ratio, config.Camera.Parameters.near, config.Camera.Parameters.far);
+    mvpMatrix.setIdentity();
+    // mvpMatrix.setPerspective(config.Camera.Parameters.fov, ratio, config.Camera.Parameters.near, config.Camera.Parameters.far);
 
-    // projMatrix.setFrustum(left, right,
+    // mvpMatrix.setFrustum(left, right,
     //     bottom, top,
     //     near, far);
 
-    projMatrix.setFrustum(left, right, bottom, top, near, far);
+    mvpMatrix.setFrustum(left, right, bottom, top, near, far);
 
-    gl.viewport(0,
-        0,
-        canvas.width / 2,
-        canvas.height);
+    // gl.viewport(0,
+    //     0,
+    //     canvas.width / 2,
+    //     canvas.height);
 
-    modelMatrix.lookAt(camera.x, camera.y, camera.z,   // center of projection
+    mvpMatrix.lookAt(camera.x, camera.y, camera.z,   // center of projection
         at.x, at.y, at.z,	// look-at point
         up.x, up.y, up.z);	// View UP vector.
     modelMatrix.rotate(90, 1, 0, 0);
-    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
+
+    gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
-    drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
+    drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix);
 
-    // 2 Orthographic Camera
-    let fov;
-    if (!config.Camera.Parameters.Customize) {
-        bottom = - Math.tan(config.Camera.Parameters.fov * Math.PI / 360) * (z.near + (z.far - z.near) / 3);
-        top = - bottom;
+    // // 2 Orthographic Camera
+    // let fov;
+    // if (!config.Camera.Parameters.Customize) {
+    //     bottom = - Math.tan(config.Camera.Parameters.fov * Math.PI / 360) * (z.near + (z.far - z.near) / 3);
+    //     top = - bottom;
 
-        left = - ratio * top;
-        right = - left;
+    //     left = - ratio * top;
+    //     right = - left;
 
-        near = z.near;
-        far = z.far;
-    } else {
-        half_fov = Math.atan(config.Camera.Parameters.top / config.Camera.Parameters.near);
+    //     near = z.near;
+    //     far = z.far;
+    // } else {
+    //     half_fov = Math.atan(config.Camera.Parameters.top / config.Camera.Parameters.near);
 
-        bottom = - Math.tan(half_fov) * (config.Camera.Parameters.near + (config.Camera.Parameters.far - config.Camera.Parameters.near) / 3);
+    //     bottom = - Math.tan(half_fov) * (config.Camera.Parameters.near + (config.Camera.Parameters.far - config.Camera.Parameters.near) / 3);
 
-        top = - bottom;
+    //     top = - bottom;
 
-        left = - ratio * top;
-        right = - left;
+    //     left = - ratio * top;
+    //     right = - left;
 
-        near = config.Camera.Parameters.near;
-        far = config.Camera.Parameters.far;
-    }
+    //     near = config.Camera.Parameters.near;
+    //     far = config.Camera.Parameters.far;
+    // }
 
-    modelMatrix.setIdentity();
-    projMatrix.setIdentity();
-    projMatrix.setOrtho(left, right, 					// left,right;
-        bottom, top, 					// bottom, top;
-        near, far);			// near, far; (always >=0)
+    // modelMatrix.setIdentity();
+    // mvpMatrix.setIdentity();
+    // mvpMatrix.setOrtho(left, right, 					// left,right;
+    //     bottom, top, 					// bottom, top;
+    //     near, far);			// near, far; (always >=0)
 
-    gl.viewport(canvas.width / 2,
-        0,
-        canvas.width / 2,
-        canvas.height);
-    modelMatrix.lookAt(camera.x, camera.y, camera.z,   // center of projection
-        at.x, at.y, at.z,	// look-at point
-        up.x, up.y, up.z);	// View UP vector.
-    modelMatrix.rotate(90, 1, 0, 0);
-    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
-    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
-    drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
+    // gl.viewport(canvas.width / 2,
+    //     0,
+    //     canvas.width / 2,
+    //     canvas.height);
+    // modelMatrix.lookAt(camera.x, camera.y, camera.z,   // center of projection
+    //     at.x, at.y, at.z,	// look-at point
+    //     up.x, up.y, up.z);	// View UP vector.
+    // modelMatrix.rotate(90, 1, 0, 0);
+    // gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+    // gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    // drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);
 }
 
 function drawResize() {
@@ -1401,11 +1619,11 @@ function drawResize() {
 
     //Make canvas fill the top 0.7 of our browser window:
     let xtraMargin = 25;    // keep a margin (otherwise, browser adds scroll-bars)
-    canvas.width = innerWidth - xtraMargin;
-    canvas.height = (innerHeight * 2 / 3) - xtraMargin;
+    // canvas.width = innerWidth - xtraMargin;
+    // canvas.height = (innerHeight * 2 / 3) - xtraMargin;
     // IMPORTANT!  Need a fresh drawing in the re-sized viewports.
     updateCameraPara(changePara = 'left');
-    draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix);				// draw in all viewports.
+    draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix);				// draw in all viewports.
 }
 
 function updateAt() {
@@ -1501,7 +1719,7 @@ function attachCamera(modelMatrix, u_ModelMatrix) {
 }
 
 function updateCameraPara(changePara) {
-    let ratio = (canvas.width / 2) / canvas.height;
+    let ratio = canvas.width / canvas.height;
     if (changePara === 'left') {
         config.Camera.Parameters.bottom = config.Camera.Parameters.left / ratio;
         config.Camera.Parameters.top = - config.Camera.Parameters.bottom;
@@ -1515,4 +1733,21 @@ function updateCameraPara(changePara) {
         config.Camera.Parameters.right = config.Camera.Parameters.top * ratio;
         config.Camera.Parameters.left = - config.Camera.Parameters.right;
     }
+}
+
+function updateShader() {
+    let mode = `${config.Lighting.Type} + ${config.Shading.Type}`;
+    u_ColorMatrix = config.Location[mode].u_ColorMatrix;
+    u_eyePosWorld = config.Location[mode].u_eyePosWorld;
+    u_MvpMatrix = config.Location[mode].u_MvpMatrix;
+    u_ModelMatrix = config.Location[mode].u_ModelMatrix;
+    u_NormalMatrix = config.Location[mode].u_NormalMatrix;
+
+    for (let i = 0; i < Lamp.length; i++) {
+        Lamp[i] = config.Location[mode].Lamp[i];
+    }
+    Matl = config.Location[mode].Matl;
+
+    gl.useProgram(config.Location[mode].program);
+    gl.program = config.Location[mode].program;
 }
