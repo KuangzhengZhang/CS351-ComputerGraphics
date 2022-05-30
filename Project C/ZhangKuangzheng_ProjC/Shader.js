@@ -55,6 +55,7 @@ let shaders = {
             'uniform MatlT u_MatlSet[1];\n' +
             'uniform vec3 u_eyePosWorld;\n' +
             'uniform mat4 u_ColorMatrix;\n' +
+            'uniform int u_isNormal;\n' +
 
             'varying vec3 v_Normal;\n' +
             'varying vec4 v_Position;\n' +
@@ -62,30 +63,36 @@ let shaders = {
             'varying vec4 v_Color;\n' +
 
             'void main() {\n' +
-            '  vec3 normal, lightDirection, eyeDirection, emissive, ambient, diffuse, speculr, H;\n' +
-            '  float nDotL, nDotH, e64;\n' +
-            '  vec4 FragColor[2];\n' +
-
-            '  normal = normalize(v_Normal);\n' +
-
-            '  for (int i = 0; i < 2; i++) {\n' +
-            '    if (u_LampSet[i].isLit == 1) {\n' +
-            '      lightDirection = normalize(u_LampSet[i].pos - v_Position.xyz);\n' +
-            '      eyeDirection = normalize(u_eyePosWorld - v_Position.xyz);\n' +
-            '      nDotL = max(dot(lightDirection, normal), 0.0);\n' +
-            '      H = normalize(lightDirection + eyeDirection);\n' +
-            '      nDotH = max(dot(H, normal), 0.0);\n' +
-            '      e64 = pow(nDotH, float(u_MatlSet[0].shiny));\n' +
-            '      emissive = u_MatlSet[0].emit;\n' +
-            '      ambient = u_LampSet[i].ambi * u_MatlSet[0].ambi;\n' +
-            '      diffuse = u_LampSet[i].diff * v_Kd * nDotL;\n' +
-            '      speculr = u_LampSet[i].spec * u_MatlSet[0].spec * e64;\n' +
-            '      FragColor[i] = vec4(emissive + ambient + diffuse + speculr, 1.0);\n' +
-            '    }\n' +
+            '  if (u_isNormal == 1) {\n' +
+            '    gl_FragColor = u_ColorMatrix * v_Color;\n' +
             '  }\n' +
 
-            '  gl_FragColor = u_ColorMatrix * v_Color;\n' +
-            '  gl_FragColor = FragColor[0] + FragColor[1];\n' +
+            '  if (u_isNormal == 0) {\n' +
+            '    vec3 normal, lightDirection, eyeDirection, emissive, ambient, diffuse, speculr, H;\n' +
+            '    float nDotL, nDotH, e64;\n' +
+            '    vec4 FragColor[2];\n' +
+
+            '    normal = normalize(v_Normal);\n' +
+
+            '    for (int i = 0; i < 2; i++) {\n' +
+            '      if (u_LampSet[i].isLit == 1) {\n' +
+            '        lightDirection = normalize(u_LampSet[i].pos - v_Position.xyz);\n' +
+            '        eyeDirection = normalize(u_eyePosWorld - v_Position.xyz);\n' +
+            '        nDotL = max(dot(lightDirection, normal), 0.0);\n' +
+            '        H = normalize(lightDirection + eyeDirection);\n' +
+            '        nDotH = max(dot(H, normal), 0.0);\n' +
+            '        e64 = pow(nDotH, float(u_MatlSet[0].shiny));\n' +
+            '        emissive = u_MatlSet[0].emit;\n' +
+            '        ambient = u_LampSet[i].ambi * u_MatlSet[0].ambi;\n' +
+            '        diffuse = u_LampSet[i].diff * v_Kd * nDotL;\n' +
+            '        speculr = u_LampSet[i].spec * u_MatlSet[0].spec * e64;\n' +
+            '        FragColor[i] = vec4(emissive + ambient + diffuse + speculr, 1.0);\n' +
+            '      }\n' +
+            '    gl_FragColor = u_ColorMatrix * v_Color;\n' +
+            '    gl_FragColor = FragColor[0] + FragColor[1];\n' +
+            '    }\n' +
+            '  }\n' +
+            
             '}\n'
     },
     'Blinn-Phong Lighting + Gouraud Shading': {
@@ -120,36 +127,44 @@ let shaders = {
             'uniform mat4 u_NormalMatrix;\n' +
             'uniform vec3 u_eyePosWorld;\n' +
             'uniform mat4 u_ColorMatrix;\n' +
+            'uniform int u_isNormal;\n' +
 
             'varying vec4 v_Color;\n' +
 
             'void main() {\n' +
-            '  vec3 normal, lightDirection, eyeDirection, emissive, ambient, diffuse, speculr, H;\n' +
-            '  float nDotL, nDotH, e64;\n' +
-            '  vec4 vertexPosition, Color[2];\n' +
-
-            '  gl_Position = u_MvpMatrix * u_ModelMatrix * a_Position;\n' +
-
-            '  normal = normalize(vec3(u_NormalMatrix * a_Normal));\n' +
-            '  vertexPosition = u_ModelMatrix * a_Position;\n' +
-
-            '  for (int i = 0; i < 2; i++) {\n' +
-            '    if (u_LampSet[i].isLit == 1) {\n' +
-            '      lightDirection = normalize(u_LampSet[i].pos - vec3(vertexPosition));\n' +
-            '      eyeDirection = normalize(u_eyePosWorld - a_Position.xyz);\n' +
-            '      nDotL = max(dot(lightDirection, normal), 0.0);\n' +
-            '      H = normalize(lightDirection + eyeDirection);\n' +
-            '      nDotH = max(dot(H, normal), 0.0);\n' +
-            '      e64 = pow(nDotH, float(u_MatlSet[0].shiny));\n' +
-            '      emissive = u_MatlSet[0].emit;\n' +
-            '      ambient = u_LampSet[i].ambi * u_MatlSet[0].ambi;\n' +
-            '      diffuse = u_LampSet[i].diff * u_MatlSet[0].diff * nDotL;\n' +
-            '      speculr = u_LampSet[i].spec * u_MatlSet[0].spec * e64;\n' +
-            '      Color[i] = vec4(emissive + ambient + diffuse + speculr, 1.0);\n' +
-            '    }\n' +
+            '  if (u_isNormal == 1) {\n' +
+            '   gl_Position = u_MvpMatrix * u_ModelMatrix * a_Position;\n' +
+            '   gl_PointSize = 10.0;\n' +
+            '   v_Color = a_Color;\n' +
             '  }\n' +
 
-            '  v_Color = Color[0] + Color[1] + a_Color * 0.0 + u_ColorMatrix * vec4(u_eyePosWorld, 0.0) * 0.0 + vec4(u_MatlSet[0].ambi, 0.0) * 0.0;\n' +
+            '  if (u_isNormal == 0) {\n' +
+            '    vec3 normal, lightDirection, eyeDirection, emissive, ambient, diffuse, speculr, H;\n' +
+            '    float nDotL, nDotH, e64;\n' +
+            '    vec4 vertexPosition, Color[2];\n' +
+
+            '    gl_Position = u_MvpMatrix * u_ModelMatrix * a_Position;\n' +
+
+            '    normal = normalize(vec3(u_NormalMatrix * a_Normal));\n' +
+            '    vertexPosition = u_ModelMatrix * a_Position;\n' +
+
+            '    for (int i = 0; i < 2; i++) {\n' +
+            '      if (u_LampSet[i].isLit == 1) {\n' +
+            '        lightDirection = normalize(u_LampSet[i].pos - vec3(vertexPosition));\n' +
+            '        eyeDirection = normalize(u_eyePosWorld - a_Position.xyz);\n' +
+            '        nDotL = max(dot(lightDirection, normal), 0.0);\n' +
+            '        H = normalize(lightDirection + eyeDirection);\n' +
+            '        nDotH = max(dot(H, normal), 0.0);\n' +
+            '        e64 = pow(nDotH, float(u_MatlSet[0].shiny));\n' +
+            '        emissive = u_MatlSet[0].emit;\n' +
+            '        ambient = u_LampSet[i].ambi * u_MatlSet[0].ambi;\n' +
+            '        diffuse = u_LampSet[i].diff * u_MatlSet[0].diff * nDotL;\n' +
+            '        speculr = u_LampSet[i].spec * u_MatlSet[0].spec * e64;\n' +
+            '        Color[i] = vec4(emissive + ambient + diffuse + speculr, 1.0);\n' +
+            '      }\n' +
+            '    }\n' +
+            '    v_Color = Color[0] + Color[1] + a_Color * 0.0 + u_ColorMatrix * vec4(u_eyePosWorld, 0.0) * 0.0 + vec4(u_MatlSet[0].ambi, 0.0) * 0.0;\n' +
+            '  }\n' +
             '}\n',
 
         FSHADER_SOURCE:
@@ -219,6 +234,7 @@ let shaders = {
             'uniform MatlT u_MatlSet[1];\n' +
             'uniform vec3 u_eyePosWorld;\n' +
             'uniform mat4 u_ColorMatrix;\n' +
+            'uniform int u_isNormal;\n' +
 
             'varying vec3 v_Normal;\n' +
             'varying vec4 v_Position;\n' +
@@ -226,30 +242,35 @@ let shaders = {
             'varying vec4 v_Color;\n' +
 
             'void main() {\n' +
-            '  vec3 normal, lightDirection, eyeDirection, emissive, ambient, diffuse, speculr, R;\n' +
-            '  float nDotL, nDotH, e64, RDotV;\n' +
-            '  vec4 FragColor[2];\n' +
-
-            '  normal = normalize(v_Normal);\n' +
-
-            '  for (int i = 0; i < 2; i++) {\n' +
-            '    if (u_LampSet[i].isLit == 1) {\n' +
-            '      lightDirection = normalize(u_LampSet[i].pos - v_Position.xyz);\n' +
-            '      eyeDirection = normalize(u_eyePosWorld - v_Position.xyz);\n' +
-            '      nDotL = max(dot(lightDirection, normal), 0.0);\n' +
-            '      R = reflect(-lightDirection, normal);\n' +
-            '      RDotV = max(dot(R, eyeDirection), 0.0);\n' +
-            '      e64 = pow(RDotV, float(u_MatlSet[0].shiny));\n' +
-            '      emissive = u_MatlSet[0].emit;\n' +
-            '      ambient = u_LampSet[i].ambi * u_MatlSet[0].ambi;\n' +
-            '      diffuse = u_LampSet[i].diff * v_Kd * nDotL;\n' +
-            '      speculr = u_LampSet[i].spec * u_MatlSet[0].spec * e64;\n' +
-            '      FragColor[i] = vec4(emissive + ambient + diffuse + speculr, 1.0);\n' +
-            '    }\n' +
+            '  if (u_isNormal == 1) {\n' +
+            '    gl_FragColor = u_ColorMatrix * v_Color;\n' +
             '  }\n' +
 
-            '  gl_FragColor = u_ColorMatrix * v_Color;\n' +
-            '  gl_FragColor = FragColor[0] + FragColor[1];\n' +
+            '  if (u_isNormal == 0) {\n' +
+            '    vec3 normal, lightDirection, eyeDirection, emissive, ambient, diffuse, speculr, R;\n' +
+            '    float nDotL, nDotH, e64, RDotV;\n' +
+            '    vec4 FragColor[2];\n' +
+
+            '    normal = normalize(v_Normal);\n' +
+
+            '    for (int i = 0; i < 2; i++) {\n' +
+            '      if (u_LampSet[i].isLit == 1) {\n' +
+            '        lightDirection = normalize(u_LampSet[i].pos - v_Position.xyz);\n' +
+            '        eyeDirection = normalize(u_eyePosWorld - v_Position.xyz);\n' +
+            '        nDotL = max(dot(lightDirection, normal), 0.0);\n' +
+            '        R = reflect(-lightDirection, normal);\n' +
+            '        RDotV = max(dot(R, eyeDirection), 0.0);\n' +
+            '        e64 = pow(RDotV, float(u_MatlSet[0].shiny));\n' +
+            '        emissive = u_MatlSet[0].emit;\n' +
+            '        ambient = u_LampSet[i].ambi * u_MatlSet[0].ambi;\n' +
+            '        diffuse = u_LampSet[i].diff * v_Kd * nDotL;\n' +
+            '        speculr = u_LampSet[i].spec * u_MatlSet[0].spec * e64;\n' +
+            '        FragColor[i] = vec4(emissive + ambient + diffuse + speculr, 1.0);\n' +
+            '      }\n' +
+            '    }\n' +
+            '    gl_FragColor = u_ColorMatrix * v_Color;\n' +
+            '    gl_FragColor = FragColor[0] + FragColor[1];\n' +
+            '  }\n' +
             '}\n'
     },
     'Phong Lighting + Gouraud Shading': {
@@ -284,36 +305,45 @@ let shaders = {
             'uniform mat4 u_NormalMatrix;\n' +
             'uniform vec3 u_eyePosWorld;\n' +
             'uniform mat4 u_ColorMatrix;\n' +
+            'uniform int u_isNormal;\n' +
 
             'varying vec4 v_Color;\n' +
 
             'void main() {\n' +
-            '  vec3 normal, lightDirection, eyeDirection, emissive, ambient, diffuse, speculr, R;\n' +
-            '  float nDotL, nDotH, e64, RDotV;\n' +
-            '  vec4 vertexPosition, Color[2];\n' +
-
-            '  gl_Position = u_MvpMatrix * u_ModelMatrix * a_Position;\n' +
-
-            '  normal = normalize(vec3(u_NormalMatrix * a_Normal));\n' +
-
-            '  for (int i = 0; i < 2; i++) {\n' +
-            '    if (u_LampSet[i].isLit == 1) {\n' +
-            '      vertexPosition = u_ModelMatrix * a_Position;\n' +
-            '      lightDirection = normalize(u_LampSet[i].pos - vec3(vertexPosition));\n' +
-            '      eyeDirection = normalize(u_eyePosWorld - a_Position.xyz);\n' +
-            '      nDotL = max(dot(lightDirection, normal), 0.0);\n' +
-            '      R = reflect(-lightDirection, normal);\n' +
-            '      RDotV = max(dot(R, eyeDirection), 0.0);\n' +
-            '      e64 = pow(RDotV, float(u_MatlSet[0].shiny));\n' +
-            '      emissive = u_MatlSet[0].emit;\n' +
-            '      ambient = u_LampSet[i].ambi * u_MatlSet[0].ambi;\n' +
-            '      diffuse = u_LampSet[i].diff * u_MatlSet[0].diff * nDotL;\n' +
-            '      speculr = u_LampSet[i].spec * u_MatlSet[0].spec * e64;\n' +
-            '      Color[i] = vec4(emissive + ambient + diffuse + speculr, 1.0);\n' +
-            '    }\n' +
+            '  if (u_isNormal == 1) {\n' +
+            '   gl_Position = u_MvpMatrix * u_ModelMatrix * a_Position;\n' +
+            '   gl_PointSize = 10.0;\n' +
+            '   v_Color = a_Color;\n' +
             '  }\n' +
 
-            '  v_Color = Color[0] + Color[1] + a_Color * 0.0 + u_ColorMatrix * vec4(u_eyePosWorld, 0.0) * 0.0 + vec4(u_MatlSet[0].ambi, 0.0) * 0.0;\n' +
+            '  if (u_isNormal == 0) {\n' +
+            '    vec3 normal, lightDirection, eyeDirection, emissive, ambient, diffuse, speculr, R;\n' +
+            '    float nDotL, nDotH, e64, RDotV;\n' +
+            '    vec4 vertexPosition, Color[2];\n' +
+
+            '    gl_Position = u_MvpMatrix * u_ModelMatrix * a_Position;\n' +
+
+            '    normal = normalize(vec3(u_NormalMatrix * a_Normal));\n' +
+
+            '    for (int i = 0; i < 2; i++) {\n' +
+            '      if (u_LampSet[i].isLit == 1) {\n' +
+            '        vertexPosition = u_ModelMatrix * a_Position;\n' +
+            '        lightDirection = normalize(u_LampSet[i].pos - vec3(vertexPosition));\n' +
+            '        eyeDirection = normalize(u_eyePosWorld - a_Position.xyz);\n' +
+            '        nDotL = max(dot(lightDirection, normal), 0.0);\n' +
+            '        R = reflect(-lightDirection, normal);\n' +
+            '        RDotV = max(dot(R, eyeDirection), 0.0);\n' +
+            '        e64 = pow(RDotV, float(u_MatlSet[0].shiny));\n' +
+            '        emissive = u_MatlSet[0].emit;\n' +
+            '        ambient = u_LampSet[i].ambi * u_MatlSet[0].ambi;\n' +
+            '        diffuse = u_LampSet[i].diff * u_MatlSet[0].diff * nDotL;\n' +
+            '        speculr = u_LampSet[i].spec * u_MatlSet[0].spec * e64;\n' +
+            '        Color[i] = vec4(emissive + ambient + diffuse + speculr, 1.0);\n' +
+            '      }\n' +
+            '    }\n' +
+
+            '    v_Color = Color[0] + Color[1] + a_Color * 0.0 + u_ColorMatrix * vec4(u_eyePosWorld, 0.0) * 0.0 + vec4(u_MatlSet[0].ambi, 0.0) * 0.0;\n' +
+            '  }\n' +
             '}\n',
 
         FSHADER_SOURCE:
@@ -341,12 +371,13 @@ function initShader(gl, mode) {
     //     return;
     // }
 
-    config.Location[mode].u_ColorMatrix = gl.getUniformLocation(gl.program, 'u_ColorMatrix');
-    config.Location[mode].u_eyePosWorld = gl.getUniformLocation(gl.program, 'u_eyePosWorld');
-    config.Location[mode].u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
-    config.Location[mode].u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
-    config.Location[mode].u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix');
-    if (!config.Location[mode].u_ColorMatrix || !config.Location[mode].u_eyePosWorld || !config.Location[mode].u_MvpMatrix || !config.Location[mode].u_ModelMatrix || !config.Location[mode].u_NormalMatrix) {
+    config.Location[mode].Matrix.u_ColorMatrix = gl.getUniformLocation(gl.program, 'u_ColorMatrix');
+    config.Location[mode].Matrix.u_eyePosWorld = gl.getUniformLocation(gl.program, 'u_eyePosWorld');
+    config.Location[mode].Matrix.u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
+    config.Location[mode].Matrix.u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+    config.Location[mode].Matrix.u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix');
+    config.Location[mode].Matrix.u_isNormal = gl.getUniformLocation(gl.program, 'u_isNormal');
+    if (!config.Location[mode].Matrix.u_ColorMatrix || !config.Location[mode].Matrix.u_eyePosWorld || !config.Location[mode].Matrix.u_MvpMatrix || !config.Location[mode].Matrix.u_ModelMatrix || !config.Location[mode].Matrix.u_NormalMatrix || !config.Location[mode].Matrix.u_isNormal) {
         console.log('Failed to get GPUs matrix storage locations');
         return;
     }
@@ -374,4 +405,73 @@ function initShader(gl, mode) {
     }
 
     config.Location[mode].program = program;
+}
+
+let MatlDict = {
+    'MATL_RED_PLASTIC': 1,
+    'MATL_GRN_PLASTIC': 2,
+    'MATL_BLU_PLASTIC': 3,
+    'MATL_BLACK_PLASTIC': 4,
+    'MATL_BLACK_RUBBER': 5,
+    'MATL_BRASS': 6,
+    'MATL_BRONZE_DULL': 7,
+    'MATL_BRONZE_SHINY': 8,
+    'MATL_CHROME': 9,
+    'MATL_COPPER_DULL': 10,
+    'MATL_COPPER_SHINY': 11,
+    'MATL_GOLD_DULL': 12,
+    'MATL_GOLD_SHINY': 13,
+    'MATL_PEWTER': 14,
+    'MATL_SILVER_DULL': 15,
+    'MATL_SILVER_SHINY': 16,
+    'MATL_EMERALD': 17,
+    'MATL_JADE': 18,
+    'MATL_OBSIDIAN': 19,
+    'MATL_PEARL': 20,
+    'MATL_RUBY': 21,
+    'MATL_TURQUOISE': 22,
+    'MATL_DEFAULT': 23,
+}
+
+function updateMatl(m) {
+    let modes = Object.keys(config.Location)
+    for (let i = 0; i < modes.length; i++) {
+        // let tmpMatl = new Material(m);
+        // tmpMatl.K_emit = config.Location[modes[i]].Matl.K_emit;
+        // tmpMatl.K_ambi = config.Location[modes[i]].Matl.K_ambi;
+        // tmpMatl.K_diff = config.Location[modes[i]].Matl.K_diff;
+        // tmpMatl.K_spec = config.Location[modes[i]].Matl.K_spec;
+        // tmpMatl.K_shiny = config.Location[modes[i]].Matl.K_shiny;
+
+        // tmpMatl.uLoc_Ke = config.Location[modes[i]].Matl.uLoc_Ke;
+        // tmpMatl.uLoc_Ka = config.Location[modes[i]].Matl.uLoc_Ka;
+        // tmpMatl.uLoc_Kd = config.Location[modes[i]].Matl.uLoc_Kd;
+        // tmpMatl.uLoc_Ks = config.Location[modes[i]].Matl.uLoc_Ks;
+        // tmpMatl.uLoc_Kshiny = config.Location[modes[i]].Matl.uLoc_Kshiny;
+
+        // config.Location[modes[i]].Matl = tmpMatl;
+
+        config.Location[modes[i]].Matl.setMatl(MatlDict[m]);
+    }
+}
+
+function updateMatlValue() {
+    gl.uniform3fv(Matl.uLoc_Ke, Matl.K_emit.slice(0, 3));
+    gl.uniform3fv(Matl.uLoc_Ka, Matl.K_ambi.slice(0, 3));
+    gl.uniform3fv(Matl.uLoc_Kd, Matl.K_diff.slice(0, 3));
+    gl.uniform3fv(Matl.uLoc_Ks, Matl.K_spec.slice(0, 3));
+    gl.uniform1i(Matl.uLoc_Kshiny, parseInt(Matl.K_shiny, 10));
+}
+
+function updateIsNormal(isNormal) {
+    // let objs = ['EnderDragon', 'Clover', 'Shpere', 'Torus', 'Icosahedron'];
+    // objs.forEach((obj) => {
+    //     config.Location[modes[i]].Matrix.u_isNormal = config[Level1].isNormal;
+    // })
+    // gl.uniform1i(u_isNormal, config.EnderDragon.isNormal);
+
+    let modes = Object.keys(config.Location)
+    for (let i = 0; i < modes.length; i++) {
+        config.Location[modes[i]].Matrix.u_isNormal = isNormal;
+    }
 }

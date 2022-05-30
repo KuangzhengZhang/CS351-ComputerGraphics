@@ -18,9 +18,10 @@ let Config = function () {
                 u_MvpMatrix: null,
                 u_ModelMatrix: null,
                 u_NormalMatrix: null,
+                u_isNormal: null,
             },
             Lamp: [new LightsT(), new LightsT()],
-            Matl: new Material(MATL_GOLD_SHINY)
+            Matl: new Material(MATL_RED_PLASTIC)
         },
         'Blinn-Phong Lighting + Gouraud Shading': {
             program: null,
@@ -30,6 +31,7 @@ let Config = function () {
                 u_MvpMatrix: null,
                 u_ModelMatrix: null,
                 u_NormalMatrix: null,
+                u_isNormal: null,
             },
             Lamp: [new LightsT(), new LightsT()],
             Matl: new Material(MATL_RED_PLASTIC)
@@ -42,6 +44,7 @@ let Config = function () {
                 u_MvpMatrix: null,
                 u_ModelMatrix: null,
                 u_NormalMatrix: null,
+                u_isNormal: null,
             },
             Lamp: [new LightsT(), new LightsT()],
             Matl: new Material(MATL_RED_PLASTIC)
@@ -54,12 +57,16 @@ let Config = function () {
                 u_MvpMatrix: null,
                 u_ModelMatrix: null,
                 u_NormalMatrix: null,
+                u_isNormal: null,
             },
             Lamp: [new LightsT(), new LightsT()],
             Matl: new Material(MATL_RED_PLASTIC)
         }
-
     }
+
+    /* this.Material = {
+        Type: 'MATL_RED_PLASTIC'
+    } */
 
     this.Lighting = {
         Type: 'Blinn-Phong Lighting'
@@ -223,6 +230,9 @@ let Config = function () {
     this.Sphere = {
         Pause: false,
         Size: 0.3,
+        Matl: 'MATL_BLU_PLASTIC',
+        isNormal: 1,
+        isNormalBool: true,
         Body: {
             Pause: false,
             rotSpeed: 45,
@@ -236,6 +246,9 @@ let Config = function () {
     this.Torus = {
         Pause: false,
         Size: 0.3,
+        Matl: 'MATL_BRASS',
+        isNormal: 1,
+        isNormalBool: true,
         Body: {
             Pause: false,
             rotSpeed: 45,
@@ -249,6 +262,9 @@ let Config = function () {
     this.Icosahedron = {
         Pause: false,
         Size: 0.3,
+        Matl: 'MATL_BRONZE_DULL',
+        isNormal: 1,
+        isNormalBool: true,
         Body: {
             Pause: false,
             rotSpeed: 45,
@@ -264,6 +280,9 @@ let Config = function () {
     this.EnderDragon = {
         Pause: false,
         Size: 0.5,
+        Matl: 'MATL_RUBY',
+        isNormal: 1,
+        isNormalBool: true,
         Body: {
             Pause: false,
             Clr: [78, 42, 132, 1],
@@ -357,6 +376,9 @@ let Config = function () {
     this.Clover = {
         Pause: false,
         Size: 0.8,
+        Matl: 'MATL_PEWTER',
+        isNormal: 1,
+        isNormalBool: true,
         Stem: {
             Pause: false,
             Clr: [78, 42, 132, 1],
@@ -419,7 +441,7 @@ let colorMatrix = new Matrix4();
 let normalMatrix = new Matrix4();
 
 // Project C
-let u_eyePosWorld, u_ModelMatrix, u_MvpMatrix, u_NormalMatrix;
+let u_eyePosWorld, u_ModelMatrix, u_MvpMatrix, u_NormalMatrix, u_ColorMatrix, u_isNormal;
 let eyePosWorld = new Float32Array(3);
 let Lamp = [new LightsT(), new LightsT()];
 let matlSel = MATL_RED_PLASTIC;
@@ -440,9 +462,6 @@ let z = {
     near: 1,
     far: 20
 }
-
-// Matrix
-let u_ColorMatrix;
 
 // Position
 let targetPos = {
@@ -627,6 +646,12 @@ function initCfg() {
     // Env.add(config.Env, 'Height', 0, 1000).listen();
     // Env.open();
 
+    /* // Material
+    let Material = gui.addFolder('Material');
+    Material.add(config.Material, 'Type', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen().onChange(() => {
+        updateMatl(config.Material.Type);
+    }); */
+
     // Lighting
     let Lighting = gui.addFolder('Lighting');
     Lighting.add(config.Lighting, 'Type', ['Phong Lighting', 'Blinn-Phong Lighting', 'Cook-Torrance Lighting']).listen().onChange(() => {
@@ -707,6 +732,10 @@ function initCfg() {
     let EnderDragon = gui.addFolder('EnderDragon');
     EnderDragon.add(config.EnderDragon, 'Pause').listen();
     EnderDragon.add(config.EnderDragon, 'Size', 0, 1).listen();
+    EnderDragon.add(config.EnderDragon, 'Matl', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen();
+    EnderDragon.add(config.EnderDragon, 'isNormalBool').listen().onChange(() => {
+        config.EnderDragon.isNormal = config.EnderDragon.isNormalBool === true ? 1 : 0;
+    });
 
     // EnderDragonBody
     let EnderDragonBody = EnderDragon.addFolder('Body');
@@ -771,6 +800,11 @@ function initCfg() {
     let Clover = gui.addFolder('Clover');
     Clover.add(config.Clover, 'Pause').listen();
     Clover.add(config.Clover, 'Size', 0, 2).listen();
+    Clover.add(config.Clover, 'Matl', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen();
+    Clover.add(config.Clover, 'isNormalBool').listen().onChange(() => {
+        config.Clover.isNormal = config.Clover.isNormalBool === true ? 1 : 0;
+    });
+
 
     // CloverStem
     let CloverStem = Clover.addFolder('Stem');
@@ -797,6 +831,30 @@ function initCfg() {
     CloverPetal.add(config.Clover.Petal, 'Size', 0, 2).listen();
     CloverPetal.add(config.Clover.Petal, 'Num', 1, 6, 1).listen();
     // Clover.open();
+
+    // Sphere
+    let Sphere = gui.addFolder('Sphere');
+    Sphere.add(config.Sphere, 'Matl', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen();
+    Sphere.add(config.Sphere, 'isNormalBool').listen().onChange(() => {
+        config.Sphere.isNormal = config.Sphere.isNormalBool === true ? 1 : 0;
+    });
+
+
+    // Torus
+    let Torus = gui.addFolder('Torus');
+    Torus.add(config.Torus, 'Matl', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen();
+    Torus.add(config.Torus, 'isNormalBool').listen().onChange(() => {
+        config.Torus.isNormal = config.Torus.isNormalBool === true ? 1 : 0;
+    });
+
+
+    // Icosahedron
+    let Icosahedron = gui.addFolder('Icosahedron');
+    Icosahedron.add(config.Icosahedron, 'Matl', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen();
+    Icosahedron.add(config.Icosahedron, 'isNormalBool').listen().onChange(() => {
+        config.Icosahedron.isNormal = config.Icosahedron.isNormalBool === true ? 1 : 0;
+    });
+
 }
 
 function getMousePos(event) {
@@ -1074,7 +1132,7 @@ function initVertexBuffer() {
     return Info.n;
 }
 
-function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix) {
+function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix, u_isNormal) {
     if (!config.Env.Pause && !hasTarget) {
         // console.debug(`Update Target!`);
         targetPos.x = 2 * Math.random() - 1;
@@ -1100,6 +1158,10 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_Normal
     drawAxes(modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, name = 'world');
     modelMatrix = popMatrix();
 
+    // Sphere
+    gl.uniform1i(u_isNormal, config.Sphere.isNormal);
+    updateMatl(config.Sphere.Matl);
+    updateMatlValue()
     pushMatrix(modelMatrix);
     drawSphere(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, u_NormalMatrix);
     modelMatrix = popMatrix();
@@ -1109,6 +1171,10 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_Normal
     pushMatrix(modelMatrix);
     pushMatrix(modelMatrix);
     pushMatrix(modelMatrix);
+
+    gl.uniform1i(u_isNormal, config.EnderDragon.isNormal);
+    updateMatl(config.EnderDragon.Matl);
+    updateMatlValue();
     // Body
     drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
 
@@ -1148,6 +1214,9 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_Normal
     modelMatrix = popMatrix();
 
     // Clover
+    gl.uniform1i(u_isNormal, config.Clover.isNormal);
+    updateMatl(config.Clover.Matl);
+    updateMatlValue();
     modelMatrix = popMatrix();
     pushMatrix(modelMatrix);
     for (let i = 1; i <= config.Clover.Stem.Num; i++) {
@@ -1174,6 +1243,10 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_Normal
     modelMatrix = popMatrix();
 
     // Torus
+    gl.uniform1i(u_isNormal, config.Torus.isNormal);
+    // updateIsNormal(config.Torus.isNormal)
+    updateMatl(config.Torus.Matl);
+    updateMatlValue();
     modelMatrix = popMatrix();
     pushMatrix(modelMatrix);
     drawTorus(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix);
@@ -1181,6 +1254,9 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_Normal
     modelMatrix = popMatrix();
 
     // Icosahedron
+    gl.uniform1i(u_isNormal, config.Icosahedron.isNormal);
+    updateMatl(config.Icosahedron.Matl);
+    updateMatlValue();
     modelMatrix = popMatrix();
     pushMatrix(modelMatrix);
     drawIcosahedron(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, quatMatrix);
@@ -1471,7 +1547,7 @@ function drawGroundGrid(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_Col
     gl.drawArrays(gl.LINES, Info.Env.GroundGrid.position, Info.Env.GroundGrid.n);
 }
 
-function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix) {
+function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix, u_isNormal) {
     // Project C
     eyePosWorld.set([camera.x, camera.y, camera.z]);
     gl.uniform3fv(u_eyePosWorld, eyePosWorld);
@@ -1501,12 +1577,6 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatri
     gl.uniform3fv(Lamp[1].u_ambi, Lamp[1].I_ambi.elements);
     gl.uniform3fv(Lamp[1].u_diff, Lamp[1].I_diff.elements);
     gl.uniform3fv(Lamp[1].u_spec, Lamp[1].I_spec.elements);
-
-    gl.uniform3fv(Matl.uLoc_Ke, Matl.K_emit.slice(0, 3));
-    gl.uniform3fv(Matl.uLoc_Ka, Matl.K_ambi.slice(0, 3));
-    gl.uniform3fv(Matl.uLoc_Kd, Matl.K_diff.slice(0, 3));
-    gl.uniform3fv(Matl.uLoc_Ks, Matl.K_spec.slice(0, 3));
-    gl.uniform1i(Matl.uLoc_Kshiny, parseInt(Matl.K_shiny, 10));
 
 
     // Project B
@@ -1560,7 +1630,7 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatri
 
     gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
-    drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix);
+    drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix, u_isNormal);
 
     // // 2 Orthographic Camera
     // let fov;
@@ -1623,7 +1693,7 @@ function drawResize() {
     // canvas.height = (innerHeight * 2 / 3) - xtraMargin;
     // IMPORTANT!  Need a fresh drawing in the re-sized viewports.
     updateCameraPara(changePara = 'left');
-    draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix);				// draw in all viewports.
+    draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix, u_isNormal);				// draw in all viewports.
 }
 
 function updateAt() {
@@ -1737,11 +1807,12 @@ function updateCameraPara(changePara) {
 
 function updateShader() {
     let mode = `${config.Lighting.Type} + ${config.Shading.Type}`;
-    u_ColorMatrix = config.Location[mode].u_ColorMatrix;
-    u_eyePosWorld = config.Location[mode].u_eyePosWorld;
-    u_MvpMatrix = config.Location[mode].u_MvpMatrix;
-    u_ModelMatrix = config.Location[mode].u_ModelMatrix;
-    u_NormalMatrix = config.Location[mode].u_NormalMatrix;
+    u_ColorMatrix = config.Location[mode].Matrix.u_ColorMatrix;
+    u_eyePosWorld = config.Location[mode].Matrix.u_eyePosWorld;
+    u_MvpMatrix = config.Location[mode].Matrix.u_MvpMatrix;
+    u_ModelMatrix = config.Location[mode].Matrix.u_ModelMatrix;
+    u_NormalMatrix = config.Location[mode].Matrix.u_NormalMatrix;
+    u_isNormal = config.Location[mode].Matrix.u_isNormal;
 
     for (let i = 0; i < Lamp.length; i++) {
         Lamp[i] = config.Location[mode].Lamp[i];
