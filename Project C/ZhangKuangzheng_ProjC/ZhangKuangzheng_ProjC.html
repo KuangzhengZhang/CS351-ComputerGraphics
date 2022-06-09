@@ -49,9 +49,25 @@
     <p>Drag & Move: Rotate the Icosahedron</p>
 
     <h1>Instructions</h1>
-    <p>1. Enable "Control Menu"-"Camera"-"Attach" to attach the camera to the Clover Stamen. Choose "Look From Front" in "Control Menu"-"Camera"-"Preset Cameras" to get a better view. The camera will rotate as the Clover rotate. </p>
-    <p>2. Enable Flying-Airplane Navigation Mode by enabling "Control Menu"-"Camera"-"Flying-Airplane Navigation Mode"-"active". The camera will rotate around Z-axis automatically and continuously. Change "rotSpeed" to accelerate/decelerate the rotation.</p>
-    <p>3. Customize camera parameters when enabling "Control Menu"-"Camera"-"Customize Camara Parameters"-"Customize". "fov" will be ignored in this function. Other parameters except "near" and "far" will be modified automatically when customizing one parameter to prevent distortion.</p>
+
+    <h2>Lighting & Shading</h2>
+    You can set Lighting to "Phong Lighting"/"Blinn-Phong Lighting" and Shading to "Phong Shading"/"Gouraud Shading" in <b>"Control Menu"-"Lighting"/"Shading"-"Type"</b>, which will result in four different combinations.
+
+    <h2>Light</h2>
+    <p>1. You can change the parameters for Left/Right Light in <b>"Control Menu"-"Light"</b></p>
+    <p>2. "isLit" is to turn off/on the corresponding light</p>
+    <p>3. Headlight: "attachCamera" is to set the location of the light to the camera, which results in the specular highlight stay in the middle of the sphere as the camera moves</p>
+    <p>4. "x", "y", "z" is to change the location of the light</p>
+    <p>5. "Ambient", "Diffuse", "Specular" is to change the color of different components of the light</p>
+    
+    <h2>Material</h2>
+    <p>1. You can change the material in <b>"Control Menu"-"Sphere"/"EnderDragon"/"Clover"/"Torus"/"Icosahedron"-"Matl"</b></p>
+    <p>2. You can also show there original color in <b>"Control Menu"-"Sphere"/"EnderDragon"/"Clover"/"Torus"/"Icosahedron"-"isNormal"</b></p>
+
+    <h2>Camera</h2>
+    <p>1. Enable <b>"Control Menu"-"Camera"-"Attach"</b> to attach the camera to the Clover Stamen. Choose "Look From Front" in <b>"Control Menu"-"Camera"-"Preset Cameras"</b> to get a better view. The camera will rotate as the Clover rotate. </p>
+    <p>2. Enable Flying-Airplane Navigation Mode by enabling <b>"Control Menu"-"Camera"-"Flying-Airplane Navigation Mode"-"active"</b>. The camera will rotate around Z-axis automatically and continuously. Change "rotSpeed" to accelerate/decelerate the rotation.</p>
+    <p>3. Customize camera parameters when enabling <b>"Control Menu"-"Camera"-"Customize Camara Parameters"-"Customize"</b>. "fov" will be ignored in this function. Other parameters except "near" and "far" will be modified automatically when customizing one parameter to prevent distortion.</p>
 
     <script src="lib/webgl-utils.js"></script>
     <script src="lib/webgl-debug.js"></script>

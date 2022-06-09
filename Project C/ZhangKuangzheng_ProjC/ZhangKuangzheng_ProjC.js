@@ -5,7 +5,7 @@ let Config = function () {
         bgClr: [255, 228, 196, 1],
         // bgClr: [0, 0, 0, 1],
 
-        Width: 650,
+        Width: 1300,
         Height: 650
     }
 
@@ -88,7 +88,8 @@ let Config = function () {
             Diffuse: [255, 255, 255],
             Specular: [255, 255, 255],
             isLitBool: true,
-            isLit: 1
+            isLit: 1,
+            attachCamera: false
         },
         'right': {
             Color: [0.8, 0.8, 0.8],
@@ -101,7 +102,8 @@ let Config = function () {
             Diffuse: [255, 255, 255],
             Specular: [255, 255, 255],
             isLitBool: true,
-            isLit: 1
+            isLit: 1,
+            attachCamera: false
         }
     }
 
@@ -230,9 +232,9 @@ let Config = function () {
     this.Sphere = {
         Pause: false,
         Size: 0.3,
-        Matl: 'MATL_BLU_PLASTIC',
-        isNormal: 1,
-        isNormalBool: true,
+        Matl: 'MATL_SILVER_DULL',
+        isNormal: 0,
+        isNormalBool: false,
         Body: {
             Pause: false,
             rotSpeed: 45,
@@ -247,8 +249,8 @@ let Config = function () {
         Pause: false,
         Size: 0.3,
         Matl: 'MATL_BRASS',
-        isNormal: 1,
-        isNormalBool: true,
+        isNormal: 0,
+        isNormalBool: false,
         Body: {
             Pause: false,
             rotSpeed: 45,
@@ -263,8 +265,8 @@ let Config = function () {
         Pause: false,
         Size: 0.3,
         Matl: 'MATL_BRONZE_DULL',
-        isNormal: 1,
-        isNormalBool: true,
+        isNormal: 0,
+        isNormalBool: false,
         Body: {
             Pause: false,
             rotSpeed: 45,
@@ -281,8 +283,8 @@ let Config = function () {
         Pause: false,
         Size: 0.5,
         Matl: 'MATL_RUBY',
-        isNormal: 1,
-        isNormalBool: true,
+        isNormal: 0,
+        isNormalBool: false,
         Body: {
             Pause: false,
             Clr: [78, 42, 132, 1],
@@ -377,8 +379,8 @@ let Config = function () {
         Pause: false,
         Size: 0.8,
         Matl: 'MATL_PEWTER',
-        isNormal: 1,
-        isNormalBool: true,
+        isNormal: 0,
+        isNormalBool: false,
         Stem: {
             Pause: false,
             Clr: [78, 42, 132, 1],
@@ -425,6 +427,11 @@ let Config = function () {
             rotMaxAngle: 180,
             rotMinAngle: -180
         }
+    }
+
+    this.GroundGrid = {
+        isNormal: 1,
+        isNormalBool: false
     }
 };
 
@@ -507,6 +514,7 @@ let Info = {
     Env: {
         GroundGrid: {
             vertices: null,
+            // normals: null,
             n: null,
             position: null
         },
@@ -515,6 +523,7 @@ let Info = {
     Sphere: {
         Body: {
             vertices: null,
+            normals: null,
             // indices: null,
             n: null,
             position: null
@@ -524,6 +533,7 @@ let Info = {
     Torus: {
         Body: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
@@ -532,6 +542,7 @@ let Info = {
     Icosahedron: {
         Body: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
@@ -540,59 +551,70 @@ let Info = {
     EnderDragon: {
         Axes: {
             vertices: null,
+            // normals: null,
             n: null,
             position: null
         },
         Body: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
         Fin: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
         Neck: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
         Head: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
         Tail: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
         Wing1: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
-        Wing2: {
-            vertices: null,
-            n: null,
-            position: null
-        },
+        // Wing2: {
+        //     vertices: null,
+        //     normals: null,
+        //     n: null,
+        //     position: null
+        // },
         n: null
     },
     Clover: {
         Stem: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
         Stamen: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
         Petal: {
             vertices: null,
+            normals: null,
             n: null,
             position: null
         },
@@ -654,7 +676,7 @@ function initCfg() {
 
     // Lighting
     let Lighting = gui.addFolder('Lighting');
-    Lighting.add(config.Lighting, 'Type', ['Phong Lighting', 'Blinn-Phong Lighting', 'Cook-Torrance Lighting']).listen().onChange(() => {
+    Lighting.add(config.Lighting, 'Type', ['Phong Lighting', 'Blinn-Phong Lighting']).listen().onChange(() => {
         console.log(config.Lighting.Type);
     });
 
@@ -671,6 +693,7 @@ function initCfg() {
     LeftLight.add(config.Light['left'], 'isLitBool').name('isLit').listen().onChange(() => {
         config.Light['left'].isLit = config.Light['left'].isLitBool === true ? 1 : 0;
     });
+    LeftLight.add(config.Light['left'], 'attachCamera').listen();
     LeftLight.add(config.Light['left'].Position, 'x', -10, 10).listen();
     LeftLight.add(config.Light['left'].Position, 'y', -10, 10).listen();
     LeftLight.add(config.Light['left'].Position, 'z', -10, 10).listen();
@@ -683,6 +706,7 @@ function initCfg() {
     RightLight.add(config.Light['right'], 'isLitBool').name('isLit').listen().onChange(() => {
         config.Light['right'].isLit = config.Light['right'].isLitBool === true ? 1 : 0;
     });
+    RightLight.add(config.Light['right'], 'attachCamera').listen();
     RightLight.add(config.Light['right'].Position, 'x', -10, 10).listen();
     RightLight.add(config.Light['right'].Position, 'y', -10, 10).listen();
     RightLight.add(config.Light['right'].Position, 'z', -10, 10).listen();
@@ -733,7 +757,7 @@ function initCfg() {
     EnderDragon.add(config.EnderDragon, 'Pause').listen();
     EnderDragon.add(config.EnderDragon, 'Size', 0, 1).listen();
     EnderDragon.add(config.EnderDragon, 'Matl', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen();
-    EnderDragon.add(config.EnderDragon, 'isNormalBool').listen().onChange(() => {
+    EnderDragon.add(config.EnderDragon, 'isNormalBool').name('isNormal').listen().onChange(() => {
         config.EnderDragon.isNormal = config.EnderDragon.isNormalBool === true ? 1 : 0;
     });
 
@@ -801,7 +825,7 @@ function initCfg() {
     Clover.add(config.Clover, 'Pause').listen();
     Clover.add(config.Clover, 'Size', 0, 2).listen();
     Clover.add(config.Clover, 'Matl', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen();
-    Clover.add(config.Clover, 'isNormalBool').listen().onChange(() => {
+    Clover.add(config.Clover, 'isNormalBool').name('isNormal').listen().onChange(() => {
         config.Clover.isNormal = config.Clover.isNormalBool === true ? 1 : 0;
     });
 
@@ -835,7 +859,7 @@ function initCfg() {
     // Sphere
     let Sphere = gui.addFolder('Sphere');
     Sphere.add(config.Sphere, 'Matl', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen();
-    Sphere.add(config.Sphere, 'isNormalBool').listen().onChange(() => {
+    Sphere.add(config.Sphere, 'isNormalBool').name('isNormal').listen().onChange(() => {
         config.Sphere.isNormal = config.Sphere.isNormalBool === true ? 1 : 0;
     });
 
@@ -843,7 +867,7 @@ function initCfg() {
     // Torus
     let Torus = gui.addFolder('Torus');
     Torus.add(config.Torus, 'Matl', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen();
-    Torus.add(config.Torus, 'isNormalBool').listen().onChange(() => {
+    Torus.add(config.Torus, 'isNormalBool').name('isNormal').listen().onChange(() => {
         config.Torus.isNormal = config.Torus.isNormalBool === true ? 1 : 0;
     });
 
@@ -851,7 +875,7 @@ function initCfg() {
     // Icosahedron
     let Icosahedron = gui.addFolder('Icosahedron');
     Icosahedron.add(config.Icosahedron, 'Matl', ['MATL_RED_PLASTIC', 'MATL_GRN_PLASTIC', 'MATL_BLU_PLASTIC', 'MATL_BLACK_PLASTIC', 'MATL_BLACK_RUBBER', 'MATL_BRASS', 'MATL_BRONZE_DULL', 'MATL_BRONZE_SHINY', 'MATL_CHROME', 'MATL_COPPER_DULL', 'MATL_COPPER_SHINY', 'MATL_GOLD_DULL', 'MATL_GOLD_SHINY', 'MATL_PEWTER', 'MATL_SILVER_DULL', 'MATL_SILVER_SHINY', 'MATL_EMERALD', 'MATL_JADE', 'MATL_OBSIDIAN', 'MATL_PEARL', 'MATL_RUBY', 'MATL_TURQUOISE', 'MATL_DEFAULT']).listen();
-    Icosahedron.add(config.Icosahedron, 'isNormalBool').listen().onChange(() => {
+    Icosahedron.add(config.Icosahedron, 'isNormalBool').name('isNormal').listen().onChange(() => {
         config.Icosahedron.isNormal = config.Icosahedron.isNormalBool === true ? 1 : 0;
     });
 
@@ -1058,7 +1082,6 @@ function initVertexBuffer() {
 
     console.log(Info)
     n = Info.n;
-    // vertices = new Float32Array(n * floatsPerVertex + Sphere_Vertices.length);
     vertices = new Float32Array(n * floatsPerVertex);
     for (const [k1, v1] of Object.entries(Info)) {
         if (k1 != n) {
@@ -1066,6 +1089,19 @@ function initVertexBuffer() {
                 if (k2 != n) {
                     for (let i = 0; i < v2.n * floatsPerVertex; i++) {
                         vertices[v2.position * floatsPerVertex + i] = v2.vertices[i];
+                    }
+                }
+            }
+        }
+    }
+
+    normals = new Float32Array(n * floatsPerVertex);
+    for (const [k1, v1] of Object.entries(Info)) {
+        if (k1 != n) {
+            for (const [k2, v2] of Object.entries(v1)) {
+                if (k2 != n && typeof v2.normals != 'undefined') {
+                    for (let i = 0; i < v2.n * floatsPerVertex; i++) {
+                        normals[v2.position * floatsPerVertex + i] = v2.normals[i];
                     }
                 }
             }
@@ -1080,6 +1116,7 @@ function initVertexBuffer() {
     // }
     // indices = Sphere_Indices;
     console.log(vertices);
+    console.log(normals);
 
     // vertices = Cube;
     // n = parseInt(vertices.length / 7);
@@ -1097,15 +1134,12 @@ function initVertexBuffer() {
     // Write date into the buffer object
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
     let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-    let a_Normal = gl.getAttribLocation(gl.program, 'a_Normal');
     if (a_Position < 0) {
         console.log('Failed to get the storage location of a_Position');
         return -1;
     }
     gl.vertexAttribPointer(a_Position, 4, gl.FLOAT, false, FSIZE * 7, 0);
     gl.enableVertexAttribArray(a_Position);
-    gl.vertexAttribPointer(a_Normal, 4, gl.FLOAT, false, FSIZE * 7, 0);
-    gl.enableVertexAttribArray(a_Normal);
 
     // Color
     let a_Color = gl.getAttribLocation(gl.program, 'a_Color');
@@ -1117,6 +1151,24 @@ function initVertexBuffer() {
     gl.vertexAttribPointer(a_Color, 3, gl.FLOAT, false, FSIZE * 7, FSIZE * 4);
     // Enable the assignment to a_Color variable
     gl.enableVertexAttribArray(a_Color);
+
+
+    // a_Normal
+    vertexBuffer = gl.createBuffer();
+    if (!vertexBuffer) {
+        console.log('Failed to create the buffer object');
+        return false;
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    // Write date into the buffer object
+    gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW);
+    let a_Normal = gl.getAttribLocation(gl.program, 'a_Normal');
+    if (a_Normal < 0) {
+        console.log('Failed to get the storage location of a_Normal');
+        return -1;
+    }
+    gl.vertexAttribPointer(a_Normal, 4, gl.FLOAT, false, FSIZE * 7, 0);
+    gl.enableVertexAttribArray(a_Normal);
 
 
     // // indiceBuffer
@@ -1136,7 +1188,7 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_Normal
     if (!config.Env.Pause && !hasTarget) {
         // console.debug(`Update Target!`);
         targetPos.x = 2 * Math.random() - 1;
-        targetPos.y = 2 * Math.random();
+        targetPos.y = 2 * Math.random() + 2;
         hasTarget = true;
     }
     colorMatrix.setIdentity();
@@ -1264,6 +1316,7 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_Normal
     pushMatrix(modelMatrix);
     pushMatrix(colorMatrix);
     colorMatrix.setIdentity();
+    gl.uniform1i(u_isNormal, 1);
     drawAxes(modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, name = 'Icosahedron');
     colorMatrix = popMatrix();
     modelMatrix = popMatrix();
@@ -1271,6 +1324,7 @@ function drawScene(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_Normal
     modelMatrix = popMatrix();
 
     // GroundGrid
+    gl.uniform1i(u_isNormal, config.GroundGrid.isNormal);
     colorMatrix.setIdentity();
     modelMatrix = popMatrix();
     pushMatrix(modelMatrix);
@@ -1437,12 +1491,16 @@ async function main() {
     tick();
 }
 
-function updateInfo(Level1, Level2, Vertices) {
-    Info[Level1][Level2].vertices = Vertices;
-    Info[Level1][Level2].position = Info.n;
-    Info[Level1][Level2].n = Vertices.length / floatsPerVertex;
-    Info[Level1].n += Info[Level1][Level2].n;
-    Info.n += Info[Level1][Level2].n;
+function updateInfo(Level1, Level2, Vertices, type) {
+    if (type) {
+        Info[Level1][Level2].normals = Vertices;
+    } else {
+        Info[Level1][Level2].vertices = Vertices;
+        Info[Level1][Level2].position = Info.n;
+        Info[Level1][Level2].n = Vertices.length / floatsPerVertex;
+        Info[Level1].n += Info[Level1][Level2].n;
+        Info.n += Info[Level1][Level2].n;
+    }
 }
 
 function rotate(interval, Level1, Level2, reciprocate) {
@@ -1554,7 +1612,11 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatri
 
     // Left Light
     Lamp[0].isLit = config.Light['left'].isLit;
-    Lamp[0].I_pos.elements.set([config.Light['left'].Position.x, config.Light['left'].Position.y, config.Light['left'].Position.z]);
+    if (config.Light['left'].attachCamera) {
+        Lamp[0].I_pos.elements.set([camera.x, camera.y, camera.z]);
+    } else {
+        Lamp[0].I_pos.elements.set([config.Light['left'].Position.x, config.Light['left'].Position.y, config.Light['left'].Position.z]);
+    }
     Lamp[0].I_ambi.elements.set([config.Light['left'].Ambient[0] / 255., config.Light['left'].Ambient[1] / 255., config.Light['left'].Ambient[2] / 255.]);
     Lamp[0].I_diff.elements.set([config.Light['left'].Diffuse[0] / 255., config.Light['left'].Diffuse[1] / 255., config.Light['left'].Diffuse[2] / 255.]);
     Lamp[0].I_spec.elements.set([config.Light['left'].Specular[0] / 255., config.Light['left'].Specular[1] / 255., config.Light['left'].Specular[2] / 255.]);
@@ -1567,7 +1629,11 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatri
 
     // Right Light
     Lamp[1].isLit = config.Light['right'].isLit;
-    Lamp[1].I_pos.elements.set([config.Light['right'].Position.x, config.Light['right'].Position.y, config.Light['right'].Position.z]);
+    if (config.Light['right'].attachCamera) {
+        Lamp[1].I_pos.elements.set([camera.x, camera.y, camera.z]);
+    } else {
+        Lamp[1].I_pos.elements.set([config.Light['right'].Position.x, config.Light['right'].Position.y, config.Light['right'].Position.z]);
+    }
     Lamp[1].I_ambi.elements.set([config.Light['right'].Ambient[0] / 255., config.Light['right'].Ambient[1] / 255., config.Light['right'].Ambient[2] / 255.]);
     Lamp[1].I_diff.elements.set([config.Light['right'].Diffuse[0] / 255., config.Light['right'].Diffuse[1] / 255., config.Light['right'].Diffuse[2] / 255.]);
     Lamp[1].I_spec.elements.set([config.Light['right'].Specular[0] / 255., config.Light['right'].Specular[1] / 255., config.Light['right'].Specular[2] / 255.]);
@@ -1618,10 +1684,10 @@ function draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatri
 
     mvpMatrix.setFrustum(left, right, bottom, top, near, far);
 
-    // gl.viewport(0,
-    //     0,
-    //     canvas.width / 2,
-    //     canvas.height);
+    gl.viewport(0,
+        0,
+        canvas.width,
+        canvas.height);
 
     mvpMatrix.lookAt(camera.x, camera.y, camera.z,   // center of projection
         at.x, at.y, at.z,	// look-at point
@@ -1689,8 +1755,8 @@ function drawResize() {
 
     //Make canvas fill the top 0.7 of our browser window:
     let xtraMargin = 25;    // keep a margin (otherwise, browser adds scroll-bars)
-    // canvas.width = innerWidth - xtraMargin;
-    // canvas.height = (innerHeight * 2 / 3) - xtraMargin;
+    canvas.width = innerWidth - xtraMargin;
+    canvas.height = (innerHeight * 2 / 3) - xtraMargin;
     // IMPORTANT!  Need a fresh drawing in the re-sized viewports.
     updateCameraPara(changePara = 'left');
     draw(interval, modelMatrix, u_ModelMatrix, u_ColorMatrix, u_NormalMatrix, u_isNormal);				// draw in all viewports.
@@ -1821,4 +1887,60 @@ function updateShader() {
 
     gl.useProgram(config.Location[mode].program);
     gl.program = config.Location[mode].program;
+}
+
+function defNormals(Level1, Level2, Vertices) {
+    let n = Vertices.length / floatsPerVertex;
+    let Normals = new Float32Array(Vertices.length);
+    for (let i = 0; i < n / 3; i++) {
+        let v = [{
+            x: null,
+            y: null,
+            z: null
+        },
+        {
+            x: null,
+            y: null,
+            z: null
+        },
+        {
+            x: null,
+            y: null,
+            z: null
+        }]
+        for (let j = 0; j < 3; j++) {
+            v[j].x = Vertices[i * floatsPerVertex * 3 + j * floatsPerVertex + 0];
+            v[j].y = Vertices[i * floatsPerVertex * 3 + j * floatsPerVertex + 1];
+            v[j].z = Vertices[i * floatsPerVertex * 3 + j * floatsPerVertex + 2];
+        }
+
+        let n01 = new Vector3([
+            v[1].x - v[0].x,
+            v[1].y - v[0].y,
+            v[1].z - v[0].z
+        ]).normalize();
+        let n02 = new Vector3([
+            v[2].x - v[0].x,
+            v[2].y - v[0].y,
+            v[2].z - v[0].z
+        ]).normalize();
+
+        let normal = n01.cross(n02).normalize();
+
+        for (let j = 0; j < 3; j++) {
+            Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 0] = normal.elements[0];
+            Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 1] = normal.elements[1];
+            Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 2] = normal.elements[2];
+            Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 3] = -100000;
+            Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 4] = -100000;
+            Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 5] = -100000;
+            Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 6] = -100000;
+            // Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 3] = Vertices[i * floatsPerVertex * 3 + j * floatsPerVertex + 3];
+            // Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 4] = Vertices[i * floatsPerVertex * 3 + j * floatsPerVertex + 4];
+            // Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 5] = Vertices[i * floatsPerVertex * 3 + j * floatsPerVertex + 5];
+            // Normals[i * floatsPerVertex * 3 + j * floatsPerVertex + 6] = Vertices[i * floatsPerVertex * 3 + j * floatsPerVertex + 6];
+        }
+    }
+
+    updateInfo(Level1, Level2, Normals, type = 'normals')
 }

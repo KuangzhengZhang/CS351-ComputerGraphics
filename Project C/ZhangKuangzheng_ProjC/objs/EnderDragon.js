@@ -1,5 +1,38 @@
+function convertStripe(Vertices_tmp) {
+    let n = Vertices_tmp.length / floatsPerVertex;
+    let Vertices = new Float32Array(((n - 2) * 3) * floatsPerVertex);
+
+    for (let k = 0; k < floatsPerVertex; k++) {
+        Vertices[k] = Vertices_tmp[k]
+    }
+
+    for (let i = 1; i < n - 2; i++) {
+        for (let k = 0; k < 2 * floatsPerVertex; k++) {
+            Vertices[((i - 1) * 3 + 1) * floatsPerVertex + k] = Vertices_tmp[i * floatsPerVertex + k];
+        }
+        for (let k = 0; k < 2 * floatsPerVertex; k++) {
+            Vertices[((i - 1) * 3 + 1) * floatsPerVertex + k + 2 * floatsPerVertex] = Vertices_tmp[i * floatsPerVertex + k];
+        }
+        if (i % 2 == 1) {
+            for (let k = 0; k < floatsPerVertex; k++) {
+                let tmp = Vertices[((i - 1) * 3) * floatsPerVertex + k];
+                Vertices[((i - 1) * 3) * floatsPerVertex + k] = Vertices[((i - 1) * 3 + 1) * floatsPerVertex + k];
+                Vertices[((i - 1) * 3 + 1) * floatsPerVertex + k] = tmp;
+            }
+        }
+    }
+
+    for (let k = 0; k < floatsPerVertex; k++) {
+        Vertices[((n - 2) * 3 - 1) * floatsPerVertex + k] = Vertices_tmp[(n - 1) * floatsPerVertex + k];
+    }
+
+    return Vertices;
+}
+
+
 function defEnderDragonBody() {
     defCylinderZ(L = config.EnderDragon.Body.L, R = config.EnderDragon.Body.R, H = config.EnderDragon.Body.H, capVerts = config.EnderDragon.Body.capVerts, Level1 = 'EnderDragon', Level2 = 'Body');
+    defNormals(Level1 = 'EnderDragon', Level2 = 'Body', Info.EnderDragon.Body.vertices);
 }
 
 function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
@@ -38,11 +71,13 @@ function drawEnderDragonBody(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
     colorMatrix.translate(config.EnderDragon.Body.Clr[0] / 255, config.EnderDragon.Body.Clr[1] / 255, config.EnderDragon.Body.Clr[2] / 255);
     gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
-    gl.drawArrays(gl.TRIANGLE_STRIP, Info.EnderDragon.Body.position, Info.EnderDragon.Body.n);
+    // gl.drawArrays(gl.TRIANGLE_STRIP, Info.EnderDragon.Body.position, Info.EnderDragon.Body.n);
+    gl.drawArrays(gl.TRIANGLES, Info.EnderDragon.Body.position, Info.EnderDragon.Body.n);
 }
 
 function defEnderDragonNeck() {
     defConvex(W = config.EnderDragon.Neck.W, H = config.EnderDragon.Neck.H, L = config.EnderDragon.Neck.L, w = config.EnderDragon.Neck.w, h = config.EnderDragon.Neck.h, l = config.EnderDragon.Neck.l, Offest = config.EnderDragon.Neck.L, Level1 = 'EnderDragon', Level2 = 'Neck');
+    defNormals(Level1 = 'EnderDragon', Level2 = 'Neck', Info.EnderDragon.Neck.vertices);
 }
 
 function drawEnderDragonNeck(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx) {
@@ -70,6 +105,7 @@ function drawEnderDragonNeck(interval, modelMatrix, u_ModelMatrix, colorMatrix, 
 
 function defEnderDragonTail() {
     defConvex(W = config.EnderDragon.Tail.W, H = config.EnderDragon.Tail.H, L = config.EnderDragon.Tail.L, w = config.EnderDragon.Tail.w, h = config.EnderDragon.Tail.h, l = config.EnderDragon.Tail.l, Offest = -config.EnderDragon.Tail.L, Level1 = 'EnderDragon', Level2 = 'Tail');
+    defNormals(Level1 = 'EnderDragon', Level2 = 'Tail', Info.EnderDragon.Tail.vertices);
 }
 
 function defConvex(W, H, L, w, h, l, Offset, Level1, Level2) {
@@ -296,6 +332,7 @@ function defEnderDragonWing1() {
     ])
 
     updateInfo('EnderDragon', 'Wing1', EnderDragonWing1_Vertices);
+    defNormals(Level1 = 'EnderDragon', Level2 = 'Wing1', Info.EnderDragon.Wing1.vertices);
 }
 
 function drawEnderDragonWing1(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx) {
@@ -328,68 +365,70 @@ function defCylinderZ(L, R, H, capVerts, Level1, Level2) {
     let walColr = new Float32Array([0.2, 0.6, 0.2]);	// dark green walls
     let botColr = new Float32Array([0.2, 0.3, 0.7]);	// light blue bottom
 
-    let Vertices = new Float32Array(((capVerts * 6) - 2) * floatsPerVertex);
+    let Vertices_tmp = new Float32Array(((capVerts * 6) - 2) * floatsPerVertex);
     for (v = 0, j = 0; v < (2 * capVerts) - 1; v++, j += floatsPerVertex) {
         if (v % 2 == 0) {
-            Vertices[j] = R * Math.cos(Math.PI * v / capVerts);
-            Vertices[j + 1] = R * Math.sin(Math.PI * v / capVerts);
-            Vertices[j + 2] = -L;
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = R * Math.cos(Math.PI * v / capVerts);
+            Vertices_tmp[j + 1] = R * Math.sin(Math.PI * v / capVerts);
+            Vertices_tmp[j + 2] = -L;
+            Vertices_tmp[j + 3] = 1.0;
         }
         else {
-            Vertices[j] = 0.0;
-            Vertices[j + 1] = 0.0;
-            Vertices[j + 2] = -H;
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = 0.0;
+            Vertices_tmp[j + 1] = 0.0;
+            Vertices_tmp[j + 2] = -H;
+            Vertices_tmp[j + 3] = 1.0;
         }
         // Vertices[j + 4] = botColr[0];
         // Vertices[j + 5] = botColr[1];
         // Vertices[j + 6] = botColr[2];
-        Vertices[j + 4] = Math.random();
-        Vertices[j + 5] = Math.random();
-        Vertices[j + 6] = Math.random();
+        Vertices_tmp[j + 4] = Math.random();
+        Vertices_tmp[j + 5] = Math.random();
+        Vertices_tmp[j + 6] = Math.random();
     }
     // Wall
     for (v = 0; v < 2 * capVerts; v++, j += floatsPerVertex) {
         if (v % 2 == 0) {
-            Vertices[j] = R * Math.cos(Math.PI * v / capVerts);
-            Vertices[j + 1] = R * Math.sin(Math.PI * v / capVerts);
-            Vertices[j + 2] = -L;
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = R * Math.cos(Math.PI * v / capVerts);
+            Vertices_tmp[j + 1] = R * Math.sin(Math.PI * v / capVerts);
+            Vertices_tmp[j + 2] = -L;
+            Vertices_tmp[j + 3] = 1.0;
         }
         else {
-            Vertices[j] = R * Math.cos(Math.PI * (v - 1) / capVerts);
-            Vertices[j + 1] = R * Math.sin(Math.PI * (v - 1) / capVerts);
-            Vertices[j + 2] = L;
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = R * Math.cos(Math.PI * (v - 1) / capVerts);
+            Vertices_tmp[j + 1] = R * Math.sin(Math.PI * (v - 1) / capVerts);
+            Vertices_tmp[j + 2] = L;
+            Vertices_tmp[j + 3] = 1.0;
         }
         // Vertices[j + 4] = walColr[0];
         // Vertices[j + 5] = walColr[1];
         // Vertices[j + 6] = walColr[2];
-        Vertices[j + 4] = Math.random();
-        Vertices[j + 5] = Math.random();
-        Vertices[j + 6] = Math.random();
+        Vertices_tmp[j + 4] = Math.random();
+        Vertices_tmp[j + 5] = Math.random();
+        Vertices_tmp[j + 6] = Math.random();
     }
     for (v = 0; v < (2 * capVerts - 1); v++, j += floatsPerVertex) {
         if (v % 2 == 0) {
-            Vertices[j] = R * Math.cos(Math.PI * v / capVerts);
-            Vertices[j + 1] = R * Math.sin(Math.PI * v / capVerts);
-            Vertices[j + 2] = L;
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = R * Math.cos(Math.PI * v / capVerts);
+            Vertices_tmp[j + 1] = R * Math.sin(Math.PI * v / capVerts);
+            Vertices_tmp[j + 2] = L;
+            Vertices_tmp[j + 3] = 1.0;
         }
         else {
-            Vertices[j] = 0.0;
-            Vertices[j + 1] = 0.0;
-            Vertices[j + 2] = H;
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = 0.0;
+            Vertices_tmp[j + 1] = 0.0;
+            Vertices_tmp[j + 2] = H;
+            Vertices_tmp[j + 3] = 1.0;
         }
         // Vertices[j + 4] = topColr[0];
         // Vertices[j + 5] = topColr[1];
         // Vertices[j + 6] = topColr[2];
-        Vertices[j + 4] = Math.random();
-        Vertices[j + 5] = Math.random();
-        Vertices[j + 6] = Math.random();
+        Vertices_tmp[j + 4] = Math.random();
+        Vertices_tmp[j + 5] = Math.random();
+        Vertices_tmp[j + 6] = Math.random();
     }
+
+    let Vertices = convertStripe(Vertices_tmp);
     updateInfo(Level1, Level2, Vertices);
 }
 
@@ -398,68 +437,72 @@ function defCylinderY(L, R, capVerts, Level1, Level2) {
     let walColr = new Float32Array([0.2, 0.6, 0.2]);	// dark green walls
     let botColr = new Float32Array([0.2, 0.3, 0.7]);	// light blue bottom
 
-    let Vertices = new Float32Array(((capVerts * 6) - 2) * floatsPerVertex);
+    let Vertices_tmp = new Float32Array(((capVerts * 6) - 2) * floatsPerVertex);
     for (v = 0, j = 0; v < (2 * capVerts) - 1; v++, j += floatsPerVertex) {
         if (v % 2 == 0) {
-            Vertices[j] = R * Math.cos(Math.PI * v / capVerts);
-            Vertices[j + 1] = 0;
-            Vertices[j + 2] = R * Math.sin(Math.PI * v / capVerts);
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = R * Math.cos(Math.PI * v / capVerts);
+            Vertices_tmp[j + 1] = 0;
+            Vertices_tmp[j + 2] = R * Math.sin(Math.PI * v / capVerts);
+            Vertices_tmp[j + 3] = 1.0;
         }
         else {
-            Vertices[j] = 0.0;
-            Vertices[j + 1] = 0.0;
-            Vertices[j + 2] = 0.0;
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = 0.0;
+            Vertices_tmp[j + 1] = 0.0;
+            Vertices_tmp[j + 2] = 0.0;
+            Vertices_tmp[j + 3] = 1.0;
         }
         // Vertices[j + 4] = botColr[0];
         // Vertices[j + 5] = botColr[1];
         // Vertices[j + 6] = botColr[2];
-        Vertices[j + 4] = Math.random();
-        Vertices[j + 5] = Math.random();
-        Vertices[j + 6] = Math.random();
+        Vertices_tmp[j + 4] = Math.random();
+        Vertices_tmp[j + 5] = Math.random();
+        Vertices_tmp[j + 6] = Math.random();
     }
     // Wall
     for (v = 0; v < 2 * capVerts; v++, j += floatsPerVertex) {
         if (v % 2 == 0) {
-            Vertices[j] = R * Math.cos(Math.PI * v / capVerts);
-            Vertices[j + 1] = 0;
-            Vertices[j + 2] = R * Math.sin(Math.PI * v / capVerts);
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = R * Math.cos(Math.PI * v / capVerts);
+            Vertices_tmp[j + 1] = 0;
+            Vertices_tmp[j + 2] = R * Math.sin(Math.PI * v / capVerts);
+            Vertices_tmp[j + 3] = 1.0;
         }
         else {
-            Vertices[j] = R * Math.cos(Math.PI * (v - 1) / capVerts);
-            Vertices[j + 1] = L;
-            Vertices[j + 2] = R * Math.sin(Math.PI * (v - 1) / capVerts);
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = R * Math.cos(Math.PI * (v - 1) / capVerts);
+            Vertices_tmp[j + 1] = L;
+            Vertices_tmp[j + 2] = R * Math.sin(Math.PI * (v - 1) / capVerts);
+            Vertices_tmp[j + 3] = 1.0;
         }
         // Vertices[j + 4] = walColr[0];
         // Vertices[j + 5] = walColr[1];
         // Vertices[j + 6] = walColr[2];
-        Vertices[j + 4] = Math.random();
-        Vertices[j + 5] = Math.random();
-        Vertices[j + 6] = Math.random();
+        Vertices_tmp[j + 4] = Math.random();
+        Vertices_tmp[j + 5] = Math.random();
+        Vertices_tmp[j + 6] = Math.random();
     }
     for (v = 0; v < (2 * capVerts - 1); v++, j += floatsPerVertex) {
         if (v % 2 == 0) {
-            Vertices[j] = R * Math.cos(Math.PI * v / capVerts);
-            Vertices[j + 1] = L;
-            Vertices[j + 2] = R * Math.sin(Math.PI * v / capVerts);
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = R * Math.cos(Math.PI * v / capVerts);
+            Vertices_tmp[j + 1] = L;
+            Vertices_tmp[j + 2] = R * Math.sin(Math.PI * v / capVerts);
+            Vertices_tmp[j + 3] = 1.0;
         }
         else {
-            Vertices[j] = 0.0;
-            Vertices[j + 1] = L;
-            Vertices[j + 2] = 0.0;
-            Vertices[j + 3] = 1.0;
+            Vertices_tmp[j] = 0.0;
+            Vertices_tmp[j + 1] = L;
+            Vertices_tmp[j + 2] = 0.0;
+            Vertices_tmp[j + 3] = 1.0;
         }
         // Vertices[j + 4] = topColr[0];
         // Vertices[j + 5] = topColr[1];
         // Vertices[j + 6] = topColr[2];
-        Vertices[j + 4] = Math.random();
-        Vertices[j + 5] = Math.random();
-        Vertices[j + 6] = Math.random();
+        Vertices_tmp[j + 4] = Math.random();
+        Vertices_tmp[j + 5] = Math.random();
+        Vertices_tmp[j + 6] = Math.random();
     }
+
+    let Vertices = convertStripe(Vertices_tmp);
+
+    // updateInfo(Level1, Level2, Vertices_tmp);
     updateInfo(Level1, Level2, Vertices);
 }
 
@@ -521,6 +564,7 @@ function defCuboid(w, OffsetX, h, OffsetY, l, OffsetZ, Level1, Level2) {
     ])
 
     updateInfo(Level1, Level2, Fin_Vertices);
+    defNormals(Level1, Level2, Fin_Vertices);
 }
 
 function drawEnderDragonFin(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {

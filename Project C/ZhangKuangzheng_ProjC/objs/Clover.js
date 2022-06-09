@@ -1,5 +1,6 @@
 function defCloverStem() {
     defCylinderY(L = config.Clover.Stem.L, R = config.Clover.Stem.R, capVerts = config.Clover.Stem.capVerts, Level1 = 'Clover', Level2 = 'Stem');
+    defNormals(Level1 = 'Clover', Level2 = 'Stem', Info.Clover.Stem.vertices);
 }
 
 function drawCloverStem(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx) {
@@ -23,11 +24,13 @@ function drawCloverStem(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_Col
     colorMatrix.setTranslate(config.Clover.Stem.Clr[0] / 255, config.Clover.Stem.Clr[1] / 255, config.Clover.Stem.Clr[2] / 255);
     gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
-    gl.drawArrays(gl.TRIANGLE_STRIP, Info.Clover.Stem.position, Info.Clover.Stem.n);
+    // gl.drawArrays(gl.TRIANGLE_STRIP, Info.Clover.Stem.position, Info.Clover.Stem.n);
+    gl.drawArrays(gl.TRIANGLES, Info.Clover.Stem.position, Info.Clover.Stem.n);
 }
 
 function defCloverStamen() {
     defCylinderZ(L = config.Clover.Stamen.L, R = config.Clover.Stamen.R, H = config.Clover.Stamen.H, capVerts = config.Clover.Stamen.capVerts, Level1 = 'Clover', Level2 = 'Stamen');
+    defNormals(Level1 = 'Clover', Level2 = 'Stamen', Info.Clover.Stamen.vertices);
 }
 
 function drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix) {
@@ -45,7 +48,8 @@ function drawCloverStamen(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_C
     colorMatrix.setTranslate(config.Clover.Stamen.Clr[0] / 255, config.Clover.Stamen.Clr[1] / 255, config.Clover.Stamen.Clr[2] / 255);
     gl.uniformMatrix4fv(u_ColorMatrix, false, colorMatrix.elements);
 
-    gl.drawArrays(gl.TRIANGLE_STRIP, Info.Clover.Stamen.position, Info.Clover.Stamen.n);
+    // gl.drawArrays(gl.TRIANGLE_STRIP, Info.Clover.Stamen.position, Info.Clover.Stamen.n);
+    gl.drawArrays(gl.TRIANGLES, Info.Clover.Stamen.position, Info.Clover.Stamen.n);
 }
 
 function defCloverPetal() {
@@ -101,6 +105,7 @@ function defCloverPetal() {
     ])
 
     updateInfo('Clover', 'Petal', CloverPetal_Vertices);
+    defNormals(Level1 = 'Clover', Level2 = 'Petal', Info.Clover.Petal.vertices);
 }
 
 function drawCloverPetal(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, idx) {

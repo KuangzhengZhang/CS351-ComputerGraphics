@@ -86,7 +86,11 @@ function defIcosahedron() {
         // 1.0, 0.0, 0.0, 1.0, 0.5773502691896258, 0.5773502691896258, -0.5773502691896258,
         // 0.0, 0.0, -1.0, 1.0, 0.5773502691896258, 0.5773502691896258, -0.5773502691896258
     ])
-    updateInfo('Icosahedron', 'Body', Icosahedron_Vertices);
+
+    let Vertices = convertStripe(Icosahedron_Vertices);
+
+    updateInfo('Icosahedron', 'Body', Vertices);
+    defNormals(Level1 = 'Icosahedron', Level2 = 'Body', Info.Icosahedron.Body.vertices);
 }
 
 function drawIcosahedron(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, quatMatrix) {
@@ -100,7 +104,8 @@ function drawIcosahedron(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_Co
     modelMatrix.concat(quatMatrix);
 
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
-    gl.drawArrays(gl.TRIANGLE_STRIP, Info.Icosahedron.Body.position, Info.Icosahedron.Body.n);
+    // gl.drawArrays(gl.TRIANGLE_STRIP, Info.Icosahedron.Body.position, Info.Icosahedron.Body.n);
+    gl.drawArrays(gl.TRIANGLES, Info.Icosahedron.Body.position, Info.Icosahedron.Body.n);
 }
 
 function dragQuat(xdrag, ydrag) {

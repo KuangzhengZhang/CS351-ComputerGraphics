@@ -1021,8 +1021,12 @@ function defSphere() {
 
     // Sphere_Vertices = new Float32Array(Sphere_Vertices_Array);
     Sphere_Indices = new Float32Array(Sphere_Indices_Array);
-    // updateInfo('Sphere', 'Body', Sphere_Vertices, Sphere_Indices);
-    updateInfo('Sphere', 'Body', Sphere_Vertices);
+    
+    
+    let Vertices = convertStripe(Sphere_Vertices);
+    updateInfo('Sphere', 'Body', Vertices);
+    updateInfo('Sphere', 'Body', Vertices, type='normals');
+    // defNormals(Level1 = 'Sphere', Level2 = 'Body', Info.Sphere.Body.vertices);
 }
 
 function drawSphere(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMatrix, u_NormalMatrix) {
@@ -1042,6 +1046,7 @@ function drawSphere(interval, modelMatrix, u_ModelMatrix, colorMatrix, u_ColorMa
     normalMatrix.transpose();
     gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements);
 
-    gl.drawArrays(gl.TRIANGLE_STRIP, Info.Sphere.Body.position, Info.Sphere.Body.n);
+    // gl.drawArrays(gl.TRIANGLE_STRIP, Info.Sphere.Body.position, Info.Sphere.Body.n);
+    gl.drawArrays(gl.TRIANGLES, Info.Sphere.Body.position, Info.Sphere.Body.n);
     // gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, indices);
 }
